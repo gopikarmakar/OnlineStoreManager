@@ -14,7 +14,7 @@ public class MainHandler {
 	
 	private boolean isConnectedToDB = false;
 	
-	private final String dbName = "onlinestore";
+	private final String dbName = "HyendStore";
 	private final String invoiceTableNameTag = "_invoices"; 
 
 	private final PDFInvoiceHandler pdfHandler;
