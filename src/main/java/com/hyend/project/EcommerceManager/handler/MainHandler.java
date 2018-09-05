@@ -3,7 +3,8 @@ package com.hyend.project.EcommerceManager.handler;
 import java.io.IOException;
 import java.text.ParseException;
 
-import com.hyend.project.EcommerceManager.data.model.PurchasedItemDetails;
+import com.hyend.project.EcommerceManager.data.model.SoldItemDetails;
+import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
 
 public class MainHandler {	
@@ -22,26 +23,33 @@ public class MainHandler {
 	private final SpreadSheetHandler sheetHandler;
 	
 	public MainHandler() {		
-		pdfHandler = new PDFInvoiceHandler(this);
 		dbHandler = new DatabaseHandler(this);
+		pdfHandler = new PDFInvoiceHandler(this);		
 		sheetHandler = new SpreadSheetHandler(this);
 	}
 	
 	public void init() {
 		
 		//TODO: Need to create a queue to handle multiple PDF files one by one.				
-		fetchAndInitInvoicesData();
+		
+		setEcommercePlatform("flipkart");
+		//fetchAndInitInvoicesData();
 		connectToDB();
 		if(isConnectedToDB) {
 			//TODO: Show connect failed message alert dialog box
 			fetchCollection();
-			storeAllInvoicesToDB();
-			showAllRecordsFromDB();
+			//storeAllInvoicesToDB();
+			//showAllRecordsFromDB();
 			//showInvoiceForOrderId("OD112973057490800000");
 			//updateCourierStatusForOrderId("OD112973057490800000");
 			//showInvoiceForOrderId("OD112973057490800000");
-			//showAllInvoicesBetween("02-04-2018", "29-07-2018");
+			//getAllInvoicesBetween("02-04-2018", "29-07-2018");
+			generateSpreadSheetBetween("02-04-2018", "29-07-2018");
 		}
+	}
+	
+	public void setEcommercePlatform(String plateformName) {
+		CURRENT_ECOMM_PLATFORM_NAME = plateformName;
 	}
 		
 	private void fetchAndInitInvoicesData() {
@@ -119,7 +127,7 @@ public class MainHandler {
 	
 	private void showAllRecordsFromDB() {		
 		try {		
-			for(PurchasedItemDetails record : dbHandler.getAllInvoices()) {
+			for(SoldItemDetails record : dbHandler.getAllInvoices()) {
 				System.out.println(record.toString());
 			}
 		} catch (NullPointerException npex) {
@@ -131,7 +139,7 @@ public class MainHandler {
 	
 	private void showInvoiceForOrderId(String orderId) {		
 		try {
-			PurchasedItemDetails record = dbHandler.getInvoiceForOrderId(orderId);
+			SoldItemDetails record = dbHandler.getInvoiceForOrderId(orderId);
 			System.out.println(record.toString());
 		} catch (NullPointerException npex) {
 			// TODO: handle exception
@@ -141,7 +149,7 @@ public class MainHandler {
 	
 	private void showInvoiceForInvoiceNumber(String invoiceId) {		
 		try {
-			PurchasedItemDetails record = dbHandler.getInvoiceForOrderId(invoiceId);
+			SoldItemDetails record = dbHandler.getInvoiceForOrderId(invoiceId);
 			System.out.println(record.toString());
 		} catch (NullPointerException npex) {
 			// TODO: handle exception
@@ -149,21 +157,22 @@ public class MainHandler {
 		}		
 	}
 	
-	private void showAllInvoicesBetween(String startDate, String endDate) {		
+	private void getAllInvoicesBetween(String startDate, String endDate) {
 		try {
-			for(PurchasedItemDetails record : dbHandler.getInvoicesBetweenOrderDate(startDate, endDate)) {
+			SoldItemsCollection.get().addSoldItemDetailsList(
+					dbHandler.getInvoicesBetweenOrderDate(startDate, endDate));			
+			for(SoldItemDetails record : SoldItemsCollection.get().getSoldItemsDetailsList()) {
 				System.out.println(record.toString());
-			}
-			//createSpreadSheet();
+			}						
 		} catch (ParseException e) {
 			System.out.println("Parse error : Couldn't Parse The Date");
 			// TODO: handle exception
-			e.printStackTrace();			
+			e.printStackTrace();
 		} catch (NullPointerException npex) {
 			// TODO: handle exception
 			npex.printStackTrace();
 			System.out.println("No Invoice Found Between " + startDate + " and " + endDate + " Dates.");
-		}								
+		}
 	}
 	
 	private void updateCourierStatusForOrderId(String orderId) {
@@ -175,8 +184,9 @@ public class MainHandler {
 		}
 	}
 	
-	private void createSpreadSheet() {
+	private void generateSpreadSheetBetween(String startDate, String endDate) {
 		try {
+			getAllInvoicesBetween(startDate, endDate);
 			sheetHandler.generateInvoiceSpreadSheet();
 		} catch (IOException ioex) {
 			// TODO: handle exception

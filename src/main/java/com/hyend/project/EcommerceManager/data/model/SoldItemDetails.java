@@ -9,7 +9,7 @@ import org.bson.Document;
 import com.hyend.project.EcommerceManager.handler.MainHandler;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
 
-public class PurchasedItemDetails {
+public class SoldItemDetails {
 	
 	private String id = "";
 	private String eCommercePlatformName = "NA";		
@@ -29,7 +29,7 @@ public class PurchasedItemDetails {
 	public InvoiceDetails invoiceDetails = null;	
 	public CourierDetails courierDetails = null;
 	
-	public PurchasedItemDetails() {
+	public SoldItemDetails() {
 		taxDetails = new TaxDetails();
 		orderDetails = new OrderDetails();
 		buyerDetails = new BuyerDetails();
@@ -66,7 +66,7 @@ public class PurchasedItemDetails {
 	public void mapDetails(final String tag, final String value) 
 			throws ParseException, NumberFormatException {
 		
-		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+		//SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 		switch(tag) {		
 			case "CPD: ":
 				productDetails.setCPD(value);
@@ -81,8 +81,8 @@ public class PurchasedItemDetails {
 				break;
 			case "Order Date: ":
 				String[] orderDateNTime = parseDateNTime(value);
-				Date orderDate = dateFormat.parse(orderDateNTime[0]);
-				orderDetails.setOrderDate(orderDate);
+				//Date orderDate = dateFormat.parse(orderDateNTime[0]);				
+				orderDetails.setOrderDate(new MyDate().getFormattedDate(orderDateNTime[0]));
 				orderDetails.setOrderTime(orderDateNTime[1]);
 				break;				
 			case "Tracking ID: ":
@@ -95,8 +95,8 @@ public class PurchasedItemDetails {
 			case "Invoice Date: ":
 				String[] invoiceDateNTime = parseDateNTime(value);
 				//System.out.println("Invoice Date = " + invoiceDateNTime[0]);
-				Date invoiceDate = dateFormat.parse(invoiceDateNTime[0]);
-				invoiceDetails.setInvoiceDate(invoiceDate);
+				//Date invoiceDate = dateFormat.parse(invoiceDateNTime[0]);
+				invoiceDetails.setInvoiceDate(new MyDate().getFormattedDate(invoiceDateNTime[0]));
 				invoiceDetails.setInvoiceTime(invoiceDateNTime[1]);
 				break;
 			case "TOTAL PRICE: ":
@@ -229,62 +229,76 @@ public class PurchasedItemDetails {
         return document;
     }
 	
-	public static PurchasedItemDetails fromDocument(Document document) {
+	public static SoldItemDetails fromDocument(Document document) {
 		
 		//System.out.println(document.toJson());
-		PurchasedItemDetails purchaseDetails = new PurchasedItemDetails();
+		SoldItemDetails soldItemDetails = new SoldItemDetails();
 		
-		purchaseDetails.setId(document.getString("_id"));		
-		purchaseDetails.setECommercePlatformName(document.getString(ConstantFields.ECOMMERCE_PLATFORM_NAME_FIELD));
+		soldItemDetails.setId(document.getString("_id"));		
+		soldItemDetails.setECommercePlatformName(document.getString(ConstantFields.ECOMMERCE_PLATFORM_NAME_FIELD));
 		
 		Document buyerDoc = (Document) document.get(ConstantFields.BUYER_DETAILS);
-		purchaseDetails.buyerDetails.setBuyerName(buyerDoc.getString(ConstantFields.BUYER_NAME_FIELD));		
-		purchaseDetails.buyerDetails.setBuyerPostalCode(buyerDoc.getString(ConstantFields.BUYER_POSTAL_CODE_FIELD));
-		purchaseDetails.buyerDetails.setBuyerPhoneNumber(buyerDoc.getString(ConstantFields.BUYER_PHONE_NUMBER_FIELD));
-		purchaseDetails.buyerDetails.setBuyerEmailAddress(buyerDoc.getString(ConstantFields.BUYER_EMAIL_ADDRESS_FIELD));		
-		purchaseDetails.buyerDetails.setBuyerBillingAddress(buyerDoc.getString(ConstantFields.BUYER_BILLING_ADDRESS_FIELD));
-		purchaseDetails.buyerDetails.setBuyerDeliveryAddress(buyerDoc.getString(ConstantFields.BUYER_DELIVERY_ADDRESS_FIELD));
-		purchaseDetails.buyerDetails.setBuyerShippingAddress(buyerDoc.getString(ConstantFields.BUYER_SHIPPING_ADDRESS_FIELD));
+		soldItemDetails.buyerDetails.setBuyerName(buyerDoc.getString(ConstantFields.BUYER_NAME_FIELD));		
+		soldItemDetails.buyerDetails.setBuyerPostalCode(buyerDoc.getString(ConstantFields.BUYER_POSTAL_CODE_FIELD));
+		soldItemDetails.buyerDetails.setBuyerPhoneNumber(buyerDoc.getString(ConstantFields.BUYER_PHONE_NUMBER_FIELD));
+		soldItemDetails.buyerDetails.setBuyerEmailAddress(buyerDoc.getString(ConstantFields.BUYER_EMAIL_ADDRESS_FIELD));		
+		soldItemDetails.buyerDetails.setBuyerBillingAddress(buyerDoc.getString(ConstantFields.BUYER_BILLING_ADDRESS_FIELD));
+		soldItemDetails.buyerDetails.setBuyerDeliveryAddress(buyerDoc.getString(ConstantFields.BUYER_DELIVERY_ADDRESS_FIELD));
+		soldItemDetails.buyerDetails.setBuyerShippingAddress(buyerDoc.getString(ConstantFields.BUYER_SHIPPING_ADDRESS_FIELD));
 		
 		Document productDoc = (Document) document.get(ConstantFields.PRODUCT_DETAILS);
-		purchaseDetails.productDetails.setCPD(productDoc.getString(ConstantFields.CPD_FIELD));
-		purchaseDetails.productDetails.setProductId(productDoc.getString(ConstantFields.PRODUCT_ID_FIELD));
-		purchaseDetails.productDetails.setProductSKU(productDoc.getString(ConstantFields.PRODUCT_SKU_FIELD));
-		purchaseDetails.productDetails.setProductName(productDoc.getString(ConstantFields.PRODUCT_NAME_FIELD));		
-		purchaseDetails.productDetails.setProductWeight(productDoc.getDouble(ConstantFields.PRODUCT_WEIGHT_FIELD));		
-		purchaseDetails.productDetails.setProductDescription(productDoc.getString(ConstantFields.PRODUCT_DESC_FIELD));
+		soldItemDetails.productDetails.setCPD(productDoc.getString(ConstantFields.CPD_FIELD));
+		soldItemDetails.productDetails.setProductId(productDoc.getString(ConstantFields.PRODUCT_ID_FIELD));
+		soldItemDetails.productDetails.setProductSKU(productDoc.getString(ConstantFields.PRODUCT_SKU_FIELD));
+		soldItemDetails.productDetails.setProductName(productDoc.getString(ConstantFields.PRODUCT_NAME_FIELD));		
+		soldItemDetails.productDetails.setProductWeight(productDoc.getDouble(ConstantFields.PRODUCT_WEIGHT_FIELD));		
+		soldItemDetails.productDetails.setProductDescription(productDoc.getString(ConstantFields.PRODUCT_DESC_FIELD));
 		
 		Document orderDoc = (Document) document.get(ConstantFields.ORDER_DETAILS);
-		purchaseDetails.orderDetails.setOrderId(orderDoc.getString(ConstantFields.ORDER_ID_FIELD));
-		purchaseDetails.orderDetails.setOrderDate(orderDoc.getDate(ConstantFields.ORDER_DATE_FIELD));		
-		purchaseDetails.orderDetails.setOrderTime(orderDoc.getString(ConstantFields.ORDER_TIME_FIELD));
-		purchaseDetails.orderDetails.setTotalQuantity(orderDoc.getInteger(ConstantFields.TOTAL_QUANTITY_FIELD));
+		soldItemDetails.orderDetails.setOrderId(orderDoc.getString(ConstantFields.ORDER_ID_FIELD));
+		soldItemDetails.orderDetails.setOrderDate(orderDoc.getDate(ConstantFields.ORDER_DATE_FIELD));		
+		soldItemDetails.orderDetails.setOrderTime(orderDoc.getString(ConstantFields.ORDER_TIME_FIELD));
+		soldItemDetails.orderDetails.setTotalQuantity(orderDoc.getInteger(ConstantFields.TOTAL_QUANTITY_FIELD));
 		
 		Document invoiceDoc = (Document) document.get(ConstantFields.INVOICE_DETAILS);		
-		purchaseDetails.invoiceDetails.setInvoiceDate(invoiceDoc.getDate(ConstantFields.INVOICE_DATE_FIELD));		
-		purchaseDetails.invoiceDetails.setInvoiceTime(invoiceDoc.getString(ConstantFields.INVOICE_TIME_FIELD));
-		purchaseDetails.invoiceDetails.setInvoiceNumber(invoiceDoc.getString(ConstantFields.INVOICE_NUMBER_FIELD));
+		soldItemDetails.invoiceDetails.setInvoiceDate(invoiceDoc.getDate(ConstantFields.INVOICE_DATE_FIELD));		
+		soldItemDetails.invoiceDetails.setInvoiceTime(invoiceDoc.getString(ConstantFields.INVOICE_TIME_FIELD));
+		soldItemDetails.invoiceDetails.setInvoiceNumber(invoiceDoc.getString(ConstantFields.INVOICE_NUMBER_FIELD));
 		
 		Document logisticDoc = (Document) document.get(ConstantFields.COURIER_DETAILS);
-		purchaseDetails.courierDetails.setCourierName(logisticDoc.getString(ConstantFields.COURIER_NAME_FIELD));
-		purchaseDetails.courierDetails.setCourierStatus(logisticDoc.getString(ConstantFields.COURIER_STATUS_FIELD));
-		purchaseDetails.courierDetails.setCourierReturnStatus(logisticDoc.getString(ConstantFields.COURIER_RETURN_STATUS_FIELD));
-		purchaseDetails.courierDetails.setCourierTrackingNumber(logisticDoc.getString(ConstantFields.COURIER_TRACKING_ID_FIELD));		
-		purchaseDetails.courierDetails.setCourierReturnRcvdDate(logisticDoc.getDate(ConstantFields.COURIER_RETURN_RCVD_DATE_FIELD));		
-		purchaseDetails.courierDetails.setCourierReturnCondition(logisticDoc.getString(ConstantFields.COURIER_RETURN_CONDITION_FIELD));
+		soldItemDetails.courierDetails.setCourierName(logisticDoc.getString(ConstantFields.COURIER_NAME_FIELD));
+		soldItemDetails.courierDetails.setCourierStatus(logisticDoc.getString(ConstantFields.COURIER_STATUS_FIELD));
+		soldItemDetails.courierDetails.setCourierReturnStatus(logisticDoc.getString(ConstantFields.COURIER_RETURN_STATUS_FIELD));
+		soldItemDetails.courierDetails.setCourierTrackingNumber(logisticDoc.getString(ConstantFields.COURIER_TRACKING_ID_FIELD));		
+		soldItemDetails.courierDetails.setCourierReturnRcvdDate(logisticDoc.getDate(ConstantFields.COURIER_RETURN_RCVD_DATE_FIELD));		
+		soldItemDetails.courierDetails.setCourierReturnCondition(logisticDoc.getString(ConstantFields.COURIER_RETURN_CONDITION_FIELD));
 		
 		Document amountDoc = (Document) document.get(ConstantFields.PAYMENT_DETAILS);
-		purchaseDetails.paymentDetails.setTotalAmount(amountDoc.getDouble(ConstantFields.TOTAL_AMOUNT_FIELD));
-		purchaseDetails.paymentDetails.setPaymentMethod(amountDoc.getString(ConstantFields.PAYMENT_METHOD_FIELD));		
-		purchaseDetails.paymentDetails.setShippingCharge(amountDoc.getDouble(ConstantFields.SHIPPING_CHARGE_FIELD));
+		soldItemDetails.paymentDetails.setTotalAmount(amountDoc.getDouble(ConstantFields.TOTAL_AMOUNT_FIELD));
+		soldItemDetails.paymentDetails.setPaymentMethod(amountDoc.getString(ConstantFields.PAYMENT_METHOD_FIELD));		
+		soldItemDetails.paymentDetails.setShippingCharge(amountDoc.getDouble(ConstantFields.SHIPPING_CHARGE_FIELD));
 		
 		Document taxDoc = (Document) document.get(ConstantFields.TAX_DETAILS);
-		purchaseDetails.taxDetails.setGSTRate(taxDoc.getInteger(ConstantFields.GST_RATE_FIELD));
-		purchaseDetails.taxDetails.setGSTAmount(taxDoc.getDouble(ConstantFields.GST_AMOUNT_FIELD));
-		purchaseDetails.taxDetails.setTaxableAmount(taxDoc.getDouble(ConstantFields.TAXABLE_AMOUNT_FIELD));
+		soldItemDetails.taxDetails.setGSTRate(taxDoc.getInteger(ConstantFields.GST_RATE_FIELD));
+		soldItemDetails.taxDetails.setGSTAmount(taxDoc.getDouble(ConstantFields.GST_AMOUNT_FIELD));
+		soldItemDetails.taxDetails.setTaxableAmount(taxDoc.getDouble(ConstantFields.TAXABLE_AMOUNT_FIELD));
 		
 		//System.out.println("SoldItemDetails" + soldItemDetails.toString());
-		return purchaseDetails;
+		return soldItemDetails;
+	}
+	
+	public class MyDate extends Date {
+	    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+	    public MyDate() {}
+	    
+	    public Date getFormattedDate(String date) throws ParseException {
+	    	return dateFormat.parse(date);
+	    }
+
+	    @Override
+	    public String toString() {
+	        return dateFormat.format(this);
+	    }
 	}
 	
 	public class TaxDetails {
@@ -559,14 +573,16 @@ public class PurchasedItemDetails {
 
 	public class CourierDetails {
 		
-		private Date courierReturnRcvdDate;
+		private Date courierReturnRcvdDate = null;
 		private String courierName = "NA";
 		private String courierStatus = "NA";
 		private String courierReturnStatus = "NA";	
 		private String courierTrackingNumber = "NA";	
 		private String courierReturnCondition = "NA";
 
-		public CourierDetails() {}
+		public CourierDetails() {
+			//this.courierReturnRcvdDate = new MyDate();
+		}
 		
 		public void setCourierStatus(String courierStatus) {
 			this.courierStatus = courierStatus;
@@ -612,7 +628,7 @@ public class PurchasedItemDetails {
 			this.courierReturnRcvdDate = courierReturnRcvdDate;
 		}
 		
-		public Date getCourierReturnRcvdDate() {
+		public Date getCourierReturnRcvdDate() {			
 			return this.courierReturnRcvdDate;
 		}
 	}

@@ -14,9 +14,9 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.PDFTextStripperByArea;
 
-import com.hyend.project.EcommerceManager.data.model.PurchasedItemDetails;
+import com.hyend.project.EcommerceManager.data.model.SoldItemDetails;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
-import com.hyend.project.EcommerceManager.data.model.PurchasedItemsCollection;
+import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
 
 public final class PDFInvoiceHandler {
 	
@@ -38,11 +38,11 @@ public final class PDFInvoiceHandler {
 		     "TOTAL PRICE: ", "Shipping Charge", "Courier Name: ", "Courier AWB No: "};
 	
 	private MainHandler dataHandler = null;
-	private PurchasedItemsCollection purchasedItemsCollection = null;
+	private SoldItemsCollection purchasedItemsCollection = null;
 	
 	public PDFInvoiceHandler(MainHandler dataHandler) {
 		this.dataHandler = dataHandler;
-		purchasedItemsCollection = PurchasedItemsCollection.get();
+		purchasedItemsCollection = SoldItemsCollection.get();
 	}
 	
 	/**
@@ -161,21 +161,21 @@ public final class PDFInvoiceHandler {
 			// split by whitespace
             String lines[] = pdfFileInText.split("\\r?\\n");
                                  
-            PurchasedItemDetails purchaseDetails = new PurchasedItemDetails();
-            purchaseDetails.setECommercePlatformName(MainHandler.CURRENT_ECOMM_PLATFORM_NAME);        	
+            SoldItemDetails soldItemDetails = new SoldItemDetails();
+            soldItemDetails.setECommercePlatformName(MainHandler.CURRENT_ECOMM_PLATFORM_NAME);        	
         	String[] keys = getInvoiceKeysToFetch();
             for (String line : lines) {            	
             	for(String key : keys) {
                 	if(line.toLowerCase().contains(key.toLowerCase())) {
-                		purchaseDetails.mapDetails(key, line.substring(key.length()));                		
+                		soldItemDetails.mapDetails(key, line.substring(key.length()));                		
                 	}               	
                 }
             	//System.out.println(line);
             }                        
             document.close(); //Closing the document            
-            purchaseDetails.setId(purchaseDetails.orderDetails.getOrderId() + 
-            					  purchaseDetails.invoiceDetails.getInvoiceNumber());
-            purchasedItemsCollection.addPurchaseItemDetails(purchaseDetails.getId(), purchaseDetails);
+            soldItemDetails.setId(soldItemDetails.orderDetails.getOrderId() + 
+            					  soldItemDetails.invoiceDetails.getInvoiceNumber());
+            purchasedItemsCollection.addSoldItemDetails(soldItemDetails.getId(), soldItemDetails);
         }
 	}
 	

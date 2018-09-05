@@ -16,9 +16,9 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.MongoCollection;
 
-import com.hyend.project.EcommerceManager.data.model.PurchasedItemDetails;
+import com.hyend.project.EcommerceManager.data.model.SoldItemDetails;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
-import com.hyend.project.EcommerceManager.data.model.PurchasedItemsCollection;
+import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
 
 public final class DatabaseHandler {
 	
@@ -30,11 +30,11 @@ public final class DatabaseHandler {
 	private MongoClientURI mongoClientUri = null;
 	private MongoCollection<Document> dbCollection = null;
 
-	private final PurchasedItemsCollection purchasedItemsCollection;
+	private final SoldItemsCollection purchasedItemsCollection;
 	
 	public DatabaseHandler(MainHandler dataHandler) {
 		this.dataHandler = dataHandler;
-		purchasedItemsCollection = PurchasedItemsCollection.get();		
+		purchasedItemsCollection = SoldItemsCollection.get();		
 	}
 
 	/**
@@ -53,6 +53,7 @@ public final class DatabaseHandler {
 	
 	public void fetchCollection(String tableName) throws IllegalArgumentException {
 		dbCollection = mongoDB.getCollection(tableName);
+		System.out.println(" ### Collection Name : " + dbCollection.getNamespace());
 	}
 	
 	/**
@@ -66,13 +67,14 @@ public final class DatabaseHandler {
 		dbCollection.insertMany(createDocuments());
 	}
 	
-	public List<PurchasedItemDetails> getAllInvoices() throws NullPointerException {
-		List<PurchasedItemDetails> records = new ArrayList<>();
-		MongoCursor<Document> cursor = dbCollection.find().iterator();		
+	public List<SoldItemDetails> getAllInvoices() throws NullPointerException {
+		List<SoldItemDetails> records = new ArrayList<>();
+		MongoCursor<Document> cursor = dbCollection.find().iterator();
+		//System.out.println(cursor.next());
 		try {
 		    while (cursor.hasNext()) {
 		    	//System.out.println(cursor.next());
-		        records.add(PurchasedItemDetails.fromDocument(cursor.next()));
+		        records.add(SoldItemDetails.fromDocument(cursor.next()));
 		    }
 		} finally {
 		    cursor.close();
@@ -80,20 +82,20 @@ public final class DatabaseHandler {
 		return records;
 	}
 	
-	public PurchasedItemDetails getInvoiceForOrderId(String orderId) throws NullPointerException {	
+	public SoldItemDetails getInvoiceForOrderId(String orderId) throws NullPointerException {	
 		Bson filter = Filters.and(Filters.eq(
 				ConstantFields.ORDER_DETAILS + "." + 
 				ConstantFields.ORDER_ID_FIELD, orderId));
 		Document document = dbCollection.find(filter).first();
-		return PurchasedItemDetails.fromDocument(document);
+		return SoldItemDetails.fromDocument(document);
 	}
 	
-	public PurchasedItemDetails getInvoiceForInvoiceId(String invoiceId) throws NullPointerException {	
+	public SoldItemDetails getInvoiceForInvoiceId(String invoiceId) throws NullPointerException {	
 		Bson filter = Filters.and(Filters.eq(
 				ConstantFields.INVOICE_DETAILS + "." +
 				ConstantFields.INVOICE_NUMBER_FIELD, invoiceId));
 		Document document = dbCollection.find(filter).first();
-		return PurchasedItemDetails.fromDocument(document);
+		return SoldItemDetails.fromDocument(document);
 	}
 	
 	public void updateCourierStatusForOrderId(String orderId) throws NullPointerException {
@@ -106,9 +108,9 @@ public final class DatabaseHandler {
 		dbCollection.updateOne(filter, doc);
 	}
 	
-	public List<PurchasedItemDetails> getInvoicesBetweenOrderDate(
+	public List<SoldItemDetails> getInvoicesBetweenOrderDate(
 			String startDate, String endDate) throws ParseException, NullPointerException {
-		final List<PurchasedItemDetails> records = new ArrayList<>();
+		final List<SoldItemDetails> records = new ArrayList<>();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 		Date startDt = dateFormat.parse(startDate);  
 		Date endDt = dateFormat.parse(endDate);
@@ -123,7 +125,7 @@ public final class DatabaseHandler {
 			@Override
 			public void apply(final Document document) {
 			    //System.out.println(document.toJson());
-				records.add(PurchasedItemDetails.fromDocument(document));
+				records.add(SoldItemDetails.fromDocument(document));
 			}
 		};
 		dbCollection.find(filter).forEach(dateBlock);		
@@ -132,7 +134,7 @@ public final class DatabaseHandler {
 	
 	private List<Document> createDocuments() {
 		List<Document> documents = new ArrayList<>();
-		for(PurchasedItemDetails details : purchasedItemsCollection.getPurchasedItemsDetails()) {
+		for(SoldItemDetails details : purchasedItemsCollection.getSoldItemsDetailsList()) {
 			//System.out.println(details.toString());
 			documents.add(details.toDocument());
 		}

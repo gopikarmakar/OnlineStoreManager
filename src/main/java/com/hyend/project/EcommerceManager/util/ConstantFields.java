@@ -3,7 +3,7 @@ package com.hyend.project.EcommerceManager.util;
 public class ConstantFields {
 	
 	/**
-	 * PDF File Related Error Codes.
+	 * PDF File Read Fail Error Codes.
 	 */
 	public static final int NO_ERROR = 0;	
 	public static final int PDF_NO_PAGES_ERROR = 1;
@@ -14,7 +14,7 @@ public class ConstantFields {
 	public static final int ECOMMERCE_PLATFORM_NOT_FOUND_ERROR = 6;
 	
 	/**
-	 * Payment Method
+	 * Payment Method Fields
 	 */	 
 	public static final String PAYMENT_METHOD_COD = "cod";
 	public static final String PAYMENT_METHOD_PREPAID = "prepaid";
@@ -26,7 +26,7 @@ public class ConstantFields {
 	public static final String COURIER_STATUS_IN_TRANSIT = "in-transit";
 	
 	/**
-	 * ECommerce Platform Field
+	 * ECommerce Platform
 	 */
 	public static final String ECOMMERCE_PLATFORM_NAME_FIELD = "ecomm_platform_name";
 	
@@ -97,12 +97,13 @@ public class ConstantFields {
 	public static final String BUYER_DELIVERY_ADDRESS_FIELD = "buyer_delivery_address";
 	public static final String BUYER_SHIPPING_ADDRESS_FIELD = "buyer_shipping_address";	
 	
-	
-	public static final String[] tableColumnFields = {
-		    "CPD", "GST_Rate", "Order_Id", "Buyer_Name", "GST_Amount", "Order_Date",
-		    "Order_Time", "Total_Amount", "Product_Name", "Invoice_Date", "Invoice_Time",
-		    "Payment_Method", "Taxable_Amount", "Logistics_Name", "Total_Quantity",
-		    "Invoice_Number", "Shipping_Charge", "Buyer_Postal_Code", "Buyer_Phone Number",
-		    "Product_Description", "Buyer_Billing_Address", "Buyer_Delivery_Address",
-		    "Buyer_Shipping_Address", "Courier_Tracking_Number", "Ecommerce_Platform Name"};
+	/**
+	 * Spread Sheet Column Fields
+	 */
+	public static final String[] COLUMN_FIELDS = {
+		"Order Id", "Order Date", "Invoice Id", "Invoice Date",
+		"Quantity", "Amount", "Courier Name", "Tracking Id", 
+		"Courier Status", "Courier Return Status",
+		"Courier Return Rcvd Date", "Courier Return Condition" 
+	};
 }

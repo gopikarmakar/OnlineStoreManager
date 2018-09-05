@@ -2,13 +2,23 @@ package com.hyend.project.EcommerceManager.handler;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
 import java.io.FileOutputStream;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFFontFormatting;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
+import com.hyend.project.EcommerceManager.data.model.SoldItemDetails;
+import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
 
 public final class SpreadSheetHandler {
@@ -42,11 +52,14 @@ public final class SpreadSheetHandler {
 	}*/
 	
 	public void generateInvoiceSpreadSheet() throws IOException {
-				 
-		HSSFSheet spreadsheet = invoiceWorkbook.createSheet(MainHandler.CURRENT_ECOMM_PLATFORM_NAME + "_sales_details");		
+		HSSFSheet spreadsheet = invoiceWorkbook.createSheet(
+				MainHandler.CURRENT_ECOMM_PLATFORM_NAME + "_sales_details");		
 		createHeadingRow(spreadsheet);
-		FileOutputStream out = new FileOutputStream(new File(
-			MainHandler.CURRENT_FILE_LOCATION + MainHandler.CURRENT_ECOMM_PLATFORM_NAME + "_invoice_details.xls"));
+		for(SoldItemDetails invoice: SoldItemsCollection.get().getSoldItemsDetailsList()) {
+			createValuesRow(spreadsheet, invoice);
+		}		
+		FileOutputStream out = new FileOutputStream(new File("/Users/karmakargopi/Downloads/hyend/" +
+			 MainHandler.CURRENT_ECOMM_PLATFORM_NAME + "_invoice_details.xls"));
 	    invoiceWorkbook.write(out);
 	    out.close();	    
 	    invoiceWorkbook.close();
@@ -54,13 +67,99 @@ public final class SpreadSheetHandler {
 	}
 	
 	private void createHeadingRow(HSSFSheet spreadsheet) {
-		int rowCount = 1;
-		int cellCount = 1;
-		HSSFRow row = spreadsheet.createRow(rowCount);
-		HSSFCell cell;		
-		for(String key : ConstantFields.tableColumnFields) {
-			cell = row.createCell(cellCount++);
+		int rowNum = 1;
+		int cellNum = 0;
+		HSSFRow row = spreadsheet.createRow(rowNum);
+		HSSFCell cell;
+		HSSFFont font = invoiceWorkbook.createFont();
+		font.setFontName(HSSFFont.FONT_ARIAL);
+		font.setFontHeightInPoints((short) 15);
+		font.setBold(true);
+		font.setColor(HSSFFont.COLOR_RED);
+		HSSFCellStyle style = invoiceWorkbook.createCellStyle();
+		style.setAlignment(HorizontalAlignment.CENTER);
+		style.setFont(font);		
+		for(String key : ConstantFields.COLUMN_FIELDS) {
+			spreadsheet.autoSizeColumn(cellNum);
+			spreadsheet.setVerticallyCenter(true);			
+			cell = row.createCell(cellNum);			
+			cell.setCellStyle(style);
 			cell.setCellValue(key);
+			cellNum += 1;
 		}				
+	}
+	
+	private void createValuesRow(HSSFSheet spreadsheet, SoldItemDetails invoice) {
+		int rowNum = spreadsheet.getLastRowNum() + 1;
+		int cellNum = 0;		
+		HSSFRow row = spreadsheet.createRow(rowNum);
+		HSSFFont font = invoiceWorkbook.createFont();
+		font.setFontName(HSSFFont.FONT_ARIAL);
+		font.setFontHeightInPoints((short) 13);
+		font.setBold(false);
+		font.setColor(HSSFFont.COLOR_NORMAL);
+		HSSFCellStyle style = invoiceWorkbook.createCellStyle();
+		style.setAlignment(HorizontalAlignment.LEFT);
+		style.setFont(font);
+		HSSFCell cell = row.createCell(cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.orderDetails.getOrderId());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);		
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.orderDetails.getOrderDate().toString());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.invoiceDetails.getInvoiceNumber());		
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.invoiceDetails.getInvoiceDate().toString());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.orderDetails.getTotalQuantity());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.paymentDetails.getTotalAmount());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.courierDetails.getCourierName());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.courierDetails.getCourierTrackingNumber());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.courierDetails.getCourierStatus());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.courierDetails.getCourierReturnStatus());		
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue((invoice.courierDetails.getCourierReturnRcvdDate() == null) ? "NA" : 
+			invoice.courierDetails.getCourierReturnRcvdDate().toString());
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(style);
+		cell.setCellValue(invoice.courierDetails.getCourierReturnCondition());
 	}
 }
