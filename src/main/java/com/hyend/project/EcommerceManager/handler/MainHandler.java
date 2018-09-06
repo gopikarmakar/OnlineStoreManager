@@ -32,10 +32,10 @@ public class MainHandler {
 		
 		//TODO: Need to create a queue to handle multiple PDF files one by one.				
 		
-		setEcommercePlatform("flipkart");
+		//setEcommercePlatform("flipkart");
 		//fetchAndInitInvoicesData();
 		connectToDB();
-		if(isConnectedToDB) {
+		/*if(isConnectedToDB) {
 			//TODO: Show connect failed message alert dialog box
 			fetchCollection();
 			//storeAllInvoicesToDB();
@@ -45,11 +45,57 @@ public class MainHandler {
 			//showInvoiceForOrderId("OD112973057490800000");
 			//getAllInvoicesBetween("02-04-2018", "29-07-2018");
 			generateSpreadSheetBetween("02-04-2018", "29-07-2018");
-		}
+		}*/
 	}
 	
 	public void setEcommercePlatform(String plateformName) {
-		CURRENT_ECOMM_PLATFORM_NAME = plateformName;
+		CURRENT_ECOMM_PLATFORM_NAME = plateformName;		
+		fetchInvoicesCollection();
+		System.out.println(CURRENT_ECOMM_PLATFORM_NAME);
+	}
+	
+	public void saveInvoicePdfToDB() {
+		if(!isConnectedToDB) {
+			System.out.println("Not Connected To DB! May Be DB Server Is Down!");
+			return;
+		}
+		fetchAndInitInvoicesData();		
+		storeAllInvoicesToDB();
+	}
+	
+	public void generateSpreadSheetBetween(String startDate, String endDate) {
+		try {			
+			getAllInvoicesBetween(startDate, endDate);
+			sheetHandler.generateInvoiceSpreadSheet();
+		} catch (IOException ioex) {
+			// TODO: handle exception
+			System.out.println("Failed To Create The Spread Sheet!");
+		}
+	}
+	
+	private void connectToDB() {
+		try {
+			dbHandler.connectToDB(dbName);
+			//TODO: Show connect successful message alert dialog box
+			System.out.println("Successfully Connected To DB!");			
+			isConnectedToDB = true;
+		} catch (RuntimeException rex) {
+			isConnectedToDB = false;
+			//TODO: Show connect failed message alert dialog box
+			System.out.println("Could Not Connect To DB. DB Server Might Be Down!");
+			rex.printStackTrace();
+		}		
+	}
+	
+	private void fetchInvoicesCollection() {		
+		try {
+			dbHandler.fetchCollection(CURRENT_ECOMM_PLATFORM_NAME + invoiceTableNameTag);
+			//TODO: Show connect successful message alert dialog box
+			System.out.println("Found The Collection!");
+		} catch (IllegalArgumentException e) {
+			// TODO: handle exception
+			System.out.println("Couldn't Find The Collection!");
+		}
 	}
 		
 	private void fetchAndInitInvoicesData() {
@@ -85,31 +131,6 @@ public class MainHandler {
 								   MainHandler.CURRENT_FILE_NAME + 
 								   " File Read & Parsed Successfully!");
 				break;
-		}
-	}
-	
-	private void connectToDB() {
-		try {
-			dbHandler.connectToDB(dbName);
-			//TODO: Show connect successful message alert dialog box
-			System.out.println("Successfully Connected To DB!");
-			isConnectedToDB = true;
-		} catch (RuntimeException rex) {
-			isConnectedToDB = false;
-			//TODO: Show connect failed message alert dialog box
-			System.out.println("Could Not Connect To DB. DB Server Might Be Down!");
-			rex.printStackTrace();
-		}		
-	}
-	
-	private void fetchCollection() {		
-		try {
-			dbHandler.fetchCollection(CURRENT_ECOMM_PLATFORM_NAME + invoiceTableNameTag);
-			//TODO: Show connect successful message alert dialog box
-			System.out.println("Found The Collection!");
-		} catch (IllegalArgumentException e) {
-			// TODO: handle exception
-			System.out.println("Couldn't Find The Collection!");
 		}
 	}
 	
@@ -182,15 +203,5 @@ public class MainHandler {
 			npex.printStackTrace();
 			System.out.println("Couldn't Update. No Invoice Found For Order Id = " + orderId);
 		}
-	}
-	
-	private void generateSpreadSheetBetween(String startDate, String endDate) {
-		try {
-			getAllInvoicesBetween(startDate, endDate);
-			sheetHandler.generateInvoiceSpreadSheet();
-		} catch (IOException ioex) {
-			// TODO: handle exception
-			System.out.println("Failed To Create The Spread Sheet!");
-		}
-	}
+	}	
 }

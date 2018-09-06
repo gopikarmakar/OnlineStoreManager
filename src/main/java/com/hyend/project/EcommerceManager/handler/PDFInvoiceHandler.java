@@ -59,7 +59,7 @@ public final class PDFInvoiceHandler {
 			
 			FileDialog dialog = PickAFile();
 			MainHandler.CURRENT_FILE_NAME = dialog.getFile();
-		    MainHandler.CURRENT_FILE_LOCATION = dialog.getDirectory();		   
+		    MainHandler.CURRENT_FILE_LOCATION = dialog.getDirectory();   
 		    System.out.println(MainHandler.CURRENT_FILE_NAME + 
 		    		" chosen from " + 
 		    		MainHandler.CURRENT_FILE_LOCATION);
@@ -104,7 +104,7 @@ public final class PDFInvoiceHandler {
 	
 	private FileDialog PickAFile() {
 		
-		FileDialog dialog = new FileDialog((Frame)null, "Select File to Open");
+		FileDialog dialog = new FileDialog((Frame) null, "Select File to Open");
 	    dialog.setMode(FileDialog.LOAD);
 	    dialog.setVisible(true);
 	    if(dialog.getFile() == null)

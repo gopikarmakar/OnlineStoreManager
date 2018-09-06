@@ -1,5 +1,7 @@
 package com.hyend.project.EcommerceManager.handler;
 
+import java.awt.FileDialog;
+import java.awt.Frame;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -23,13 +25,9 @@ import com.hyend.project.EcommerceManager.util.ConstantFields;
 
 public final class SpreadSheetHandler {
 	
-	private final String flipkartInvoiceSheetName = "flipkart_invoice";
-	
-	private MainHandler dataHandler;
 	private HSSFWorkbook invoiceWorkbook;
 
 	public SpreadSheetHandler(MainHandler dataHandler) {
-		this.dataHandler = dataHandler;
 		invoiceWorkbook = new HSSFWorkbook();
 	}
 	
@@ -51,19 +49,24 @@ public final class SpreadSheetHandler {
 		}
 	}*/
 	
-	public void generateInvoiceSpreadSheet() throws IOException {
+	public void generateInvoiceSpreadSheet() throws IOException, NullPointerException {		
 		HSSFSheet spreadsheet = invoiceWorkbook.createSheet(
 				MainHandler.CURRENT_ECOMM_PLATFORM_NAME + "_sales_details");		
 		createHeadingRow(spreadsheet);
 		for(SoldItemDetails invoice: SoldItemsCollection.get().getSoldItemsDetailsList()) {
 			createValuesRow(spreadsheet, invoice);
-		}		
-		FileOutputStream out = new FileOutputStream(new File("/Users/karmakargopi/Downloads/hyend/" +
-			 MainHandler.CURRENT_ECOMM_PLATFORM_NAME + "_invoice_details.xls"));
+		}
+		FileDialog dialog = new FileDialog(new Frame(), "Save", FileDialog.SAVE);
+	    dialog.setVisible(true);
+	    String dir = dialog.getDirectory();
+        String fileName = (dialog.getFile().contains(".xls")) ? dialog.getFile() : dialog.getFile() + ".xls";
+        File file = new File(dir + fileName);
+        file.createNewFile();
+        FileOutputStream out = new FileOutputStream(file);
 	    invoiceWorkbook.write(out);
 	    out.close();	    
 	    invoiceWorkbook.close();
-	    System.out.println("invoice_details.xlsx written successfully");
+	    System.out.println(file.getName() + " File Written Successfully!");
 	}
 	
 	private void createHeadingRow(HSSFSheet spreadsheet) {

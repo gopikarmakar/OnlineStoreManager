@@ -3,6 +3,24 @@ package com.hyend.project.EcommerceManager.util;
 public class ConstantFields {
 	
 	/**
+	 * Ecommerce Platforms Names
+	 */
+	public static final String[] ECOMMERCE_PLATFORMS = {
+		"Select Platform", "paytm", "amazon", "flipkart",
+		"snapdeal", "shopclues"
+	};
+	
+	/**
+	 * Spread Sheet Column Fields
+	 */
+	public static final String[] COLUMN_FIELDS = {
+		"Order Id", "Order Date", "Invoice Id", "Invoice Date",
+		"Quantity", "Amount", "Courier Name", "Tracking Id", 
+		"Courier Status", "Courier Return Status",
+		"Courier Return Rcvd Date", "Courier Return Condition" 
+	};
+	
+	/**
 	 * PDF File Read Fail Error Codes.
 	 */
 	public static final int NO_ERROR = 0;	
@@ -96,14 +114,4 @@ public class ConstantFields {
 	public static final String BUYER_BILLING_ADDRESS_FIELD = "buyer_billing_address";
 	public static final String BUYER_DELIVERY_ADDRESS_FIELD = "buyer_delivery_address";
 	public static final String BUYER_SHIPPING_ADDRESS_FIELD = "buyer_shipping_address";	
-	
-	/**
-	 * Spread Sheet Column Fields
-	 */
-	public static final String[] COLUMN_FIELDS = {
-		"Order Id", "Order Date", "Invoice Id", "Invoice Date",
-		"Quantity", "Amount", "Courier Name", "Tracking Id", 
-		"Courier Status", "Courier Return Status",
-		"Courier Return Rcvd Date", "Courier Return Condition" 
-	};
 }
