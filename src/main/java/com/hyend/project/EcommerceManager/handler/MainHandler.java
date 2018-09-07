@@ -11,16 +11,20 @@ import com.hyend.project.EcommerceManager.data.model.SoldItemDetails;
 import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
 import com.hyend.project.EcommerceManager.gui.OnlineStoreManager;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
+import com.mongodb.MongoBulkWriteException;
+import com.mongodb.MongoSocketException;
+import com.mongodb.MongoSocketOpenException;
+import com.mongodb.MongoTimeoutException;
 
 public final class MainHandler {	
 	
 	public static String CURRENT_FILE_NAME = "";
 	public static String CURRENT_FILE_LOCATION = "";
 	
-	private boolean isConnectedToDB = false;
-	
 	private final String dbName = "HyendStore";
 	private final String invoiceTableNameTag = "_invoices"; 
+	
+	private boolean isConnectedToDB = false;
 
 	private final PDFInvoiceHandler pdfHandler;
 	private final DatabaseHandler dbHandler;
@@ -32,41 +36,47 @@ public final class MainHandler {
 		sheetHandler = new SpreadSheetHandler(this);
 	}
 	
-	public boolean init() {
+	public void init() {
 				
-		return connectToDB();
+		connectToDB();
 		/*if(isConnectedToDB) {
-			//TODO: Show connect failed message alert dialog box
-			fetchCollection();
-			//storeAllInvoicesToDB();
-			//showAllRecordsFromDB();
-			//showInvoiceForOrderId("OD112973057490800000");
 			//updateCourierStatusForOrderId("OD112973057490800000");
-			//showInvoiceForOrderId("OD112973057490800000");
-			//getAllInvoicesBetween("02-04-2018", "29-07-2018");
-			generateSpreadSheetBetween("02-04-2018", "29-07-2018");
 		}*/
 	}
 	
+	public boolean isConnectedToDB() {
+		boolean isConnected = false;
+		try {
+			isConnected = dbHandler.isConnectedToDB();	
+		} catch (NullPointerException npex) {	
+			OnlineStoreManager.showErrorMessage("Connection Lost With MongoDB.", 
+					"Something's Wrong. Try Restarting MongoDB Server and This App Again!");
+		} catch (MongoTimeoutException e) {
+			OnlineStoreManager.showErrorMessage("Connection Lost With MongoDB.", 
+					"Try Restarting MongoDB Server and This App Again!");
+		} 
+		return isConnected;
+	}
+	
 	public void setEcommercePlatform(String plateformName) {		
-		ConstantFields.CURRENT_ECOMM_PLATFORM_NAME = plateformName;		
-		fetchInvoicesCollection();
-		System.out.println(ConstantFields.CURRENT_ECOMM_PLATFORM_NAME);
+		ConstantFields.CURRENT_ECOMM_PLATFORM_NAME = plateformName;
+		if(isConnectedToDB())
+			fetchInvoicesCollection();
 	}
 	
 	public void saveInvoicePdfToDB() {
-		if(!isConnectedToDB) {
-			System.out.println("Not Connected To DB! May Be DB Server Is Down!");
-			return;
+		if(isPlatformNameAvailable()) {
+			if(isConnectedToDB()) {
+				fetchAndInitInvoicesData();		
+				storeAllInvoicesToDB();
+			}
 		}
-		if(!isPlatformNameAvailable()) return;
-		fetchAndInitInvoicesData();		
-		storeAllInvoicesToDB();
 	}
 	
 	public void generateSpreadSheetBetween(String startDate, String endDate) {
 		try {
 			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB()) return;
 			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 			Date startDt = dateFormat.parse(startDate);  
 			Date endDt = dateFormat.parse(endDate);				
@@ -78,11 +88,80 @@ public final class MainHandler {
 			getAllInvoicesBetween(startDt, endDt);
 			sheetHandler.generateInvoiceSpreadSheet(fromMonth, tillMonth);
 		} catch (ParseException pex) {			
-			OnlineStoreManager.showErrorMessage("Date Error", "Please Enter A Valid Date In DD-MM-YYYY Format!");					
+			OnlineStoreManager.showErrorMessage("Invalid Date", 
+					"Please Enter A Valid Date In DD-MM-YYYY Format!");					
 		} catch (IOException ioex) {
 			// TODO: handle exception
 			System.out.println("Failed To Create The Spread Sheet!");
 		} 
+	}
+	
+	public void updateCourierStatusAsDelivered(String orderId) {
+		try {
+			if(!isValidValue(orderId)) return;
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB) return;
+			dbHandler.updateCourierStatusAsDelivered(orderId);
+		} catch (NullPointerException npex) {
+			showNoInvoiceFoundErrorMessage(orderId);
+		}
+	}
+	
+	public void updateReturnStatusForOrderId(String orderId) {
+		try {
+			if(!isValidValue(orderId)) return;
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB) return;			
+			dbHandler.updateCourierStatusAsDelivered(orderId);
+		} catch (NullPointerException npex) {
+			showNoInvoiceFoundErrorMessage(orderId);
+		}
+	}
+	
+	public void updateReturnRcvdDate(String orderId, String rcvdDate) {
+		try {
+			if(!isValidValue(orderId)) return;
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB) return;
+			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+			Date rcvdDt = dateFormat.parse(rcvdDate); 			
+			dbHandler.updateReturnRcvdDate(orderId, rcvdDt);
+		} catch (ParseException pex) {
+			OnlineStoreManager.showErrorMessage("Invalid Date", 
+					"Please Enter A Valid Date In DD-MM-YYYY Format!");	
+		} 
+		catch (NullPointerException npex) {
+			showNoInvoiceFoundErrorMessage(orderId);
+		}
+	}
+	
+	public void updateReturnCondition(String orderId, String condition) {
+		try {
+			if(!isValidValue(orderId)) return;
+			if(!isValidValue(condition)) return;
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB) return;			
+			dbHandler.updateReturnCondition(orderId, condition);
+		} catch (NullPointerException npex) {
+			showNoInvoiceFoundErrorMessage(orderId);
+		}
+	}
+	
+	private void connectToDB() {
+		try {
+			dbHandler.connectToDB(dbName);		
+		} catch (RuntimeException rex) {			
+			rex.printStackTrace();
+		}
+	}
+	
+	private void fetchInvoicesCollection() {		
+		try {
+			dbHandler.fetchCollection(ConstantFields.CURRENT_ECOMM_PLATFORM_NAME +
+					invoiceTableNameTag);
+		} catch (IllegalArgumentException e) {			
+			System.out.println("Couldn't Find The Collection!");
+		}
 	}
 	
 	private boolean isPlatformNameAvailable() {
@@ -96,32 +175,16 @@ public final class MainHandler {
 		return isAvailble;
 	}
 	
-	private void checkDBConnection() {
-		
+	private boolean isValidValue(String value) {
+		if(value == null || value.isEmpty())
+			return false;
+		return true;
 	}
 	
-	private boolean connectToDB() {
-		try {
-			dbHandler.connectToDB(dbName);					
-			isConnectedToDB = dbHandler.isConnectedToDB();
-			System.out.println("Successfully Connected To DB! " + isConnectedToDB);
-		} catch (RuntimeException rex) {
-			isConnectedToDB = false;			
-			//rex.printStackTrace();
-		}
-		return isConnectedToDB;
-	}
-	
-	private void fetchInvoicesCollection() {		
-		try {
-			dbHandler.fetchCollection(ConstantFields.CURRENT_ECOMM_PLATFORM_NAME +
-					invoiceTableNameTag);
-			//TODO: Show connect successful message alert dialog box
-			System.out.println("Found The Collection!");
-		} catch (IllegalArgumentException e) {
-			// TODO: handle exception
-			System.out.println("Couldn't Find The Collection!");
-		}
+	private void showNoInvoiceFoundErrorMessage(String orderId) {
+		OnlineStoreManager.showErrorMessage("No Invoice Found", 
+				"No Invoice Found For Order Id = " + orderId + "\n" +
+				"Please Enter A Valid Order Id");
 	}
 		
 	private void fetchAndInitInvoicesData() {
@@ -159,12 +222,13 @@ public final class MainHandler {
 	private void storeAllInvoicesToDB() {		
 		try {
 			dbHandler.insertAllToCollection();
-			//TODO: Show insert success message alert dialog box
-			System.out.println("Data Inserted Successfully!");
+			OnlineStoreManager.showInfoMessage("File Saved", 
+					"File Data Stored Successfully!");
 		} catch (RuntimeException rex) {
-			//TODO: Show insert failed message alert dialog box
-			System.out.println("Failed To Insert Data To DB!");
-			rex.printStackTrace();
+			if(rex.getMessage().contains("duplicate key error")) {
+				OnlineStoreManager.showErrorMessage("Duplicate File Error", 
+						"This File's Saved Already. Please Select A New File!");
+			}
 		}		
 	}
 	
@@ -214,12 +278,5 @@ public final class MainHandler {
 		}
 	}
 	
-	private void updateCourierStatusForOrderId(String orderId) {
-		try {
-			dbHandler.updateCourierStatusForOrderId(orderId);
-		} catch (NullPointerException npex) {
-			npex.printStackTrace();
-			System.out.println("Couldn't Update. No Invoice Found For Order Id = " + orderId);
-		}
-	}	
+	
 }

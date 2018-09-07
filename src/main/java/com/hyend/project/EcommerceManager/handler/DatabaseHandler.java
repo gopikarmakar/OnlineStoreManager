@@ -8,10 +8,14 @@ import java.util.Map;
 
 import org.bson.Document;
 import com.mongodb.Block;
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoClient;
 import java.text.ParseException;
 import org.bson.conversions.Bson;
 import com.mongodb.MongoClientURI;
+import com.mongodb.MongoException;
+import com.mongodb.MongoSocketOpenException;
+import com.mongodb.MongoTimeoutException;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -49,7 +53,7 @@ public final class DatabaseHandler {
 		mongoClientUri = new MongoClientURI(uri);
 	    mongoClient = new MongoClient(mongoClientUri);
 	    mongoDB = mongoClient.getDatabase(dbName);
-	    System.out.println(" ### DB Connection : " + mongoClient.getConnectPoint());
+	    //System.out.println(" ### DB Connection : " + mongoClient.getConnectPoint());
 	}
 	
 	public void fetchCollection(String tableName) throws IllegalArgumentException {
@@ -63,7 +67,7 @@ public final class DatabaseHandler {
 	 * @return
 	 * @throws NullPointerException
 	 */
-	public boolean isConnectedToDB() throws NullPointerException {
+	public boolean isConnectedToDB() throws NullPointerException, MongoSocketOpenException, MongoTimeoutException {
 		Document serverStatus = mongoDB.runCommand(new Document("serverStatus", 1));
 		Map<?, ?> connections = (Map<?, ?>) serverStatus.get("connections");
 		return connections.containsKey("current");		
@@ -111,13 +115,41 @@ public final class DatabaseHandler {
 		return SoldItemDetails.fromDocument(document);
 	}
 	
-	public void updateCourierStatusForOrderId(String orderId) throws NullPointerException {
+	public void updateCourierStatusAsDelivered(String orderId) throws NullPointerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
 				ConstantFields.ORDER_ID_FIELD, orderId));
 		Document doc = new Document("$set", new Document(
 				ConstantFields.COURIER_DETAILS + "." + 
 				ConstantFields.COURIER_STATUS_FIELD, 
 				ConstantFields.COURIER_STATUS_DELIVERED));
+		dbCollection.updateOne(filter, doc);
+	}
+	
+	public void updateReturnStatusReturned(String orderId) throws NullPointerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
+				ConstantFields.ORDER_ID_FIELD, orderId));
+		Document doc = new Document("$set", new Document(
+				ConstantFields.COURIER_DETAILS + "." + 
+				ConstantFields.COURIER_RETURN_STATUS_FIELD, 
+				ConstantFields.COURIER_RETURN_STATUS_RETURNED));
+		dbCollection.updateOne(filter, doc);
+	}
+	
+	public void updateReturnRcvdDate(String orderId, Date rcvdDate) throws NullPointerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
+				ConstantFields.ORDER_ID_FIELD, orderId));
+		Document doc = new Document("$set", new Document(
+				ConstantFields.COURIER_DETAILS + "." + 
+				ConstantFields.COURIER_RETURN_RCVD_DATE_FIELD, rcvdDate));
+		dbCollection.updateOne(filter, doc);
+	}
+	
+	public void updateReturnCondition(String orderId, String condition) throws NullPointerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
+				ConstantFields.ORDER_ID_FIELD, orderId));
+		Document doc = new Document("$set", new Document(
+				ConstantFields.COURIER_DETAILS + "." + 
+				ConstantFields.COURIER_RETURN_RCVD_DATE_FIELD, condition));
 		dbCollection.updateOne(filter, doc);
 	}
 	

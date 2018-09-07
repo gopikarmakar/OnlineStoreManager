@@ -41,10 +41,11 @@ public class ConstantFields {
 	public static final String PAYMENT_METHOD_PREPAID = "prepaid";
 	
 	/**
-	 * Courier Status
+	 * Courier Statuses
 	 */	 
 	public static final String COURIER_STATUS_DELIVERED = "delivered";
 	public static final String COURIER_STATUS_IN_TRANSIT = "in-transit";
+	public static final String COURIER_RETURN_STATUS_RETURNED = "returned";
 	
 	/**
 	 * ECommerce Platform

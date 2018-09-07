@@ -48,100 +48,128 @@ public final class SpreadSheetHandler {
 	    System.out.println(file.getName() + " File Written Successfully!");
 	}
 	
-	private void createHeadingRow(HSSFSheet spreadsheet) {
-		int rowNum = 1;
-		int cellNum = 0;
-		HSSFRow row = spreadsheet.createRow(rowNum);
-		HSSFCell cell;
+	private HSSFFont getHeardingRowFont() {
 		HSSFFont font = invoiceWorkbook.createFont();
 		font.setFontName(HSSFFont.FONT_ARIAL);
 		font.setFontHeightInPoints((short) 15);
 		font.setBold(true);
 		font.setColor(HSSFFont.COLOR_RED);
+		return font;
+	}
+	
+	private HSSFCellStyle getHeadingRowStyle() {
 		HSSFCellStyle style = invoiceWorkbook.createCellStyle();
 		style.setAlignment(HorizontalAlignment.CENTER);
-		style.setFont(font);		
+		style.setFont(getHeardingRowFont());
+		return style;
+	}
+	
+	private void createHeadingRow(HSSFSheet spreadsheet) {
+		int rowNum = 1;
+		int cellNum = 0;
+		HSSFRow row = spreadsheet.createRow(rowNum);
+		HSSFCell cell;						
 		for(String key : ConstantFields.COLUMN_FIELDS) {
 			spreadsheet.autoSizeColumn(cellNum);
 			spreadsheet.setVerticallyCenter(true);			
 			cell = row.createCell(cellNum);			
-			cell.setCellStyle(style);
+			cell.setCellStyle(getHeadingRowStyle());
 			cell.setCellValue(key);
 			cellNum += 1;
 		}				
+	}
+	
+	private HSSFFont getValuesRowFont() {
+		HSSFFont font = invoiceWorkbook.createFont();
+		font.setFontName(HSSFFont.FONT_ARIAL);
+		font.setFontHeightInPoints((short) 13);
+		font.setBold(false);
+		font.setColor(HSSFFont.COLOR_NORMAL);
+		return font;
+	}
+	
+	private HSSFCellStyle getValuesRowStyle() {
+		HSSFCellStyle style = invoiceWorkbook.createCellStyle();
+		style.setAlignment(HorizontalAlignment.LEFT);
+		style.setFont(getValuesRowFont());
+		return style;
 	}
 	
 	private void createValuesRow(HSSFSheet spreadsheet, SoldItemDetails invoice) {
 		int rowNum = spreadsheet.getLastRowNum() + 1;
 		int cellNum = 0;		
 		HSSFRow row = spreadsheet.createRow(rowNum);
-		HSSFFont font = invoiceWorkbook.createFont();
-		font.setFontName(HSSFFont.FONT_ARIAL);
-		font.setFontHeightInPoints((short) 13);
-		font.setBold(false);
-		font.setColor(HSSFFont.COLOR_NORMAL);
-		HSSFCellStyle style = invoiceWorkbook.createCellStyle();
-		style.setAlignment(HorizontalAlignment.LEFT);
-		style.setFont(font);
+		
 		HSSFCell cell = row.createCell(cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.orderDetails.getOrderId());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);		
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.orderDetails.getOrderDate().toString());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
-		cell.setCellValue(invoice.invoiceDetails.getInvoiceNumber());		
+		cell.setCellStyle(getValuesRowStyle());
+		cell.setCellValue(invoice.invoiceDetails.getInvoiceNumber());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.invoiceDetails.getInvoiceDate().toString());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.orderDetails.getTotalQuantity());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.paymentDetails.getTotalAmount());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.courierDetails.getCourierName());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.courierDetails.getCourierTrackingNumber());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.courierDetails.getCourierStatus());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
-		cell.setCellValue(invoice.courierDetails.getCourierReturnStatus());		
+		cell.setCellStyle(getValuesRowStyle());
+		cell.setCellValue(invoice.courierDetails.getCourierReturnStatus());	
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue((invoice.courierDetails.getCourierReturnRcvdDate() == null) ? "NA" : 
 			invoice.courierDetails.getCourierReturnRcvdDate().toString());
+		
 		cell = row.createCell(++cellNum);
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
-		cell.setCellStyle(style);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.courierDetails.getCourierReturnCondition());
 	}
 }

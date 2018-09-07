@@ -49,7 +49,8 @@ public class OnlineStoreManager {
 			@Override
 			public void run() {
 				app.connectingWindowFrame.setVisible(true);
-				if(app.mainHandler.init()) {	            
+				app.mainHandler.init();
+				if(app.mainHandler.isConnectedToDB()) {	            
 	        		EventQueue.invokeLater(new Runnable() {
 	        			public void run() {
 	        				try {
@@ -63,8 +64,6 @@ public class OnlineStoreManager {
 	        		});
 	        	}
 	        	else {
-	        		showErrorMessage("MongoDB Connection Failed...", 
-	    					"MongoDB Server Is Down. Please Check and Try Again!");
 	        		EventQueue.invokeLater(new Runnable() {
 		                public void run() {
 		                	app.connectingWindowFrame.setVisible(false);
@@ -84,7 +83,7 @@ public class OnlineStoreManager {
 	
 	public static void showErrorMessage(String titleBar, String errorMessage)
     {
-        JOptionPane.showMessageDialog(null, errorMessage, "Info: " + 
+        JOptionPane.showMessageDialog(null, errorMessage, "Error: " + 
         		titleBar, JOptionPane.ERROR_MESSAGE);
     }
 	
@@ -167,38 +166,62 @@ public class OnlineStoreManager {
 		endDate.setBounds(166, 293, 207, 26);
 		mainWindowFrame.getContentPane().add(endDate);
 		
-		JButton excelForDelivered = new JButton("Excel For Delivered");
+		JButton excelForDelivered = new JButton("Excel For All Delivered");
 		excelForDelivered.setBounds(44, 169, 184, 29);
-		mainWindowFrame.getContentPane().add(excelForDelivered);
+		mainWindowFrame.getContentPane().add(excelForDelivered);		
 		
 		JButton excelForAll = new JButton("Excel For All From DB");
 		excelForAll.setBounds(275, 169, 177, 29);
 		mainWindowFrame.getContentPane().add(excelForAll);
 		
-		JButton btnNewButton_4 = new JButton("Courier Status");
-		btnNewButton_4.setBounds(6, 240, 158, 29);
-		mainWindowFrame.getContentPane().add(btnNewButton_4);
+		JButton updateCourierStatusBtn = new JButton("Courier Status");
+		updateCourierStatusBtn.setBounds(6, 240, 158, 29);
+		mainWindowFrame.getContentPane().add(updateCourierStatusBtn);
+		updateCourierStatusBtn.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mainHandler.updateCourierStatusAsDelivered(orderId.getText());;
+			}
+		});
 		
 		orderId = new JTextField();
 		orderId.setColumns(10);
 		orderId.setBounds(23, 128, 141, 26);
 		mainWindowFrame.getContentPane().add(orderId);
 		
-		JButton btnNewButton_5 = new JButton("Return Status");
-		btnNewButton_5.setBounds(377, 240, 117, 29);
-		mainWindowFrame.getContentPane().add(btnNewButton_5);
+		JButton updateReturnStatusBtn = new JButton("Return Status");
+		updateReturnStatusBtn.setBounds(377, 240, 117, 29);
+		mainWindowFrame.getContentPane().add(updateReturnStatusBtn);
+		updateReturnStatusBtn.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mainHandler.updateReturnStatusForOrderId(orderId.getText());
+			}
+		});
 		
-		JButton btnNewButton_6 = new JButton("Return Condition");
-		btnNewButton_6.setBounds(6, 293, 158, 29);
-		mainWindowFrame.getContentPane().add(btnNewButton_6);
-		
-		JButton btnNewButton_7 = new JButton("Return Date ");
-		btnNewButton_7.setBounds(377, 293, 117, 29);
-		mainWindowFrame.getContentPane().add(btnNewButton_7);
+		JButton updateReturnConditionBtn = new JButton("Return Condition");
+		updateReturnConditionBtn.setBounds(6, 293, 158, 29);
+		mainWindowFrame.getContentPane().add(updateReturnConditionBtn);
+		updateReturnConditionBtn.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mainHandler.updateReturnCondition(orderId.getText(), returnDateOrCond.getText());
+			}
+		});
 		
 		returnDateOrCond = new JTextField();
 		returnDateOrCond.setColumns(10);
 		returnDateOrCond.setBounds(336, 128, 141, 26);
 		mainWindowFrame.getContentPane().add(returnDateOrCond);
+		
+		JButton updateReturnRcvdDateBtn = new JButton("Return Rceived Date");
+		updateReturnRcvdDateBtn.setBounds(377, 293, 117, 29);
+		mainWindowFrame.getContentPane().add(updateReturnRcvdDateBtn);
+		updateReturnStatusBtn.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mainHandler.updateReturnRcvdDate(orderId.getText(), returnDateOrCond.getText());
+			}
+		});
 	}	
 }

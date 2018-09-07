@@ -575,10 +575,10 @@ public class SoldItemDetails {
 		
 		private Date courierReturnRcvdDate = null;
 		private String courierName = "NA";
-		private String courierStatus = "NA";
 		private String courierReturnStatus = "NA";	
 		private String courierTrackingNumber = "NA";	
 		private String courierReturnCondition = "NA";
+		private String courierStatus = ConstantFields.COURIER_STATUS_IN_TRANSIT;
 
 		public CourierDetails() {
 			//this.courierReturnRcvdDate = new MyDate();
