@@ -127,7 +127,7 @@ public class SoldItemDetails {
 	 */
 	private String[] parseDateNTime(String dateTime) {
 		String[] dateNTime = {""};
-		switch (MainHandler.CURRENT_ECOMM_PLATFORM_NAME) {
+		switch (ConstantFields.CURRENT_ECOMM_PLATFORM_NAME) {
 			case "paytm":			
 				break;
 			case "amazon":

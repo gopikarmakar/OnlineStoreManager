@@ -20,6 +20,9 @@ public class ConstantFields {
 		"Courier Return Rcvd Date", "Courier Return Condition" 
 	};
 	
+	public static String CURRENT_ECOMM_PLATFORM_NAME = 
+			ConstantFields.ECOMMERCE_PLATFORMS[0];
+	
 	/**
 	 * PDF File Read Fail Error Codes.
 	 */

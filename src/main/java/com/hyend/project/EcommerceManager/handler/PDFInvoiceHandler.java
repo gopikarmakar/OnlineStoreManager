@@ -66,10 +66,6 @@ public final class PDFInvoiceHandler {
 		    
 		    if(!MainHandler.CURRENT_FILE_NAME.contains(".pdf")) {
 				return ConstantFields.NOT_A_PDF_FILE_ERROR;
-			}		    
-		    setECommercePlatformName();			
-		    if(MainHandler.CURRENT_ECOMM_PLATFORM_NAME.equals("NA")) {
-				return ConstantFields.ECOMMERCE_PLATFORM_NOT_FOUND_ERROR;
 			}		    		     
 		    PDDocument document = PDDocument.load(new File(
 					MainHandler.CURRENT_FILE_LOCATION + 
@@ -161,8 +157,7 @@ public final class PDFInvoiceHandler {
 			// split by whitespace
             String lines[] = pdfFileInText.split("\\r?\\n");
                                  
-            SoldItemDetails soldItemDetails = new SoldItemDetails();
-            soldItemDetails.setECommercePlatformName(MainHandler.CURRENT_ECOMM_PLATFORM_NAME);        	
+            SoldItemDetails soldItemDetails = new SoldItemDetails();                    
         	String[] keys = getInvoiceKeysToFetch();
             for (String line : lines) {            	
             	for(String key : keys) {
@@ -194,29 +189,11 @@ public final class PDFInvoiceHandler {
 		System.out.println("Current File Name = " + MainHandler.CURRENT_FILE_NAME);
 		System.out.println("Current File Location = " + MainHandler.CURRENT_FILE_LOCATION);
 	}*/
-	
-	private String setECommercePlatformName() {
-		String pdfFile = (MainHandler.CURRENT_FILE_LOCATION +
-					  MainHandler.CURRENT_FILE_NAME).toLowerCase();
-		if(pdfFile.contains("paytm"))
-			MainHandler.CURRENT_ECOMM_PLATFORM_NAME = "paytm";
-		else if(pdfFile.contains("amazon"))
-			MainHandler.CURRENT_ECOMM_PLATFORM_NAME = "amazon";
-		else if(pdfFile.contains("flipkart"))
-			MainHandler.CURRENT_ECOMM_PLATFORM_NAME = "flipkart";		
-		else if(pdfFile.contains("snapdeal"))
-			MainHandler.CURRENT_ECOMM_PLATFORM_NAME = "snapdeal";
-		else if(pdfFile.contains("shopclues"))
-			MainHandler.CURRENT_ECOMM_PLATFORM_NAME = "shopclues";
-		else
-			MainHandler.CURRENT_ECOMM_PLATFORM_NAME = "NA";
-		
-		return MainHandler.CURRENT_ECOMM_PLATFORM_NAME;
-	}
+
 	
 	public String[] getInvoiceKeysToFetch() {
 		String[] keys = {""};
-		switch (MainHandler.CURRENT_ECOMM_PLATFORM_NAME) {
+		switch (ConstantFields.CURRENT_ECOMM_PLATFORM_NAME) {
 			case "paytm":
 				break;
 			case "amazon":

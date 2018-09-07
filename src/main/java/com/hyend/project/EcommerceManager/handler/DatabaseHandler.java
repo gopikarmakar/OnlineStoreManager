@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.Document;
 import com.mongodb.Block;
@@ -54,6 +55,18 @@ public final class DatabaseHandler {
 	public void fetchCollection(String tableName) throws IllegalArgumentException {
 		dbCollection = mongoDB.getCollection(tableName);
 		System.out.println(" ### Collection Name : " + dbCollection.getNamespace());
+	}
+	
+	/**
+	 * If a value for the current key is present.
+	 * Which means we are connected to DB.
+	 * @return
+	 * @throws NullPointerException
+	 */
+	public boolean isConnectedToDB() throws NullPointerException {
+		Document serverStatus = mongoDB.runCommand(new Document("serverStatus", 1));
+		Map<?, ?> connections = (Map<?, ?>) serverStatus.get("connections");
+		return connections.containsKey("current");		
 	}
 	
 	/**
@@ -109,18 +122,13 @@ public final class DatabaseHandler {
 	}
 	
 	public List<SoldItemDetails> getInvoicesBetweenOrderDate(
-			String startDate, String endDate) throws ParseException, NullPointerException {
+			Date startDate, Date endDate) throws NullPointerException {
 		final List<SoldItemDetails> records = new ArrayList<>();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-		Date startDt = dateFormat.parse(startDate);  
-		Date endDt = dateFormat.parse(endDate);
-		System.out.println(startDt);
-		System.out.println(endDt);
 		Bson filter = Filters.and(Filters.gte(
 				ConstantFields.ORDER_DETAILS + "." + 
-				ConstantFields.ORDER_DATE_FIELD, startDt), 
+				ConstantFields.ORDER_DATE_FIELD, startDate), 
 				Filters.lte(ConstantFields.ORDER_DETAILS + "." +
-				ConstantFields.ORDER_DATE_FIELD, endDt));
+				ConstantFields.ORDER_DATE_FIELD, endDate));
 		Block<Document> dateBlock = new Block<Document>() {
 			@Override
 			public void apply(final Document document) {

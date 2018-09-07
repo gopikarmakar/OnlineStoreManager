@@ -2,16 +2,20 @@ package com.hyend.project.EcommerceManager.handler;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 import com.hyend.project.EcommerceManager.data.model.SoldItemDetails;
 import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
+import com.hyend.project.EcommerceManager.gui.OnlineStoreManager;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
 
-public class MainHandler {	
+public final class MainHandler {	
 	
 	public static String CURRENT_FILE_NAME = "";
 	public static String CURRENT_FILE_LOCATION = "";
-	public static String CURRENT_ECOMM_PLATFORM_NAME = "";
 	
 	private boolean isConnectedToDB = false;
 	
@@ -28,13 +32,9 @@ public class MainHandler {
 		sheetHandler = new SpreadSheetHandler(this);
 	}
 	
-	public void init() {
-		
-		//TODO: Need to create a queue to handle multiple PDF files one by one.				
-		
-		//setEcommercePlatform("flipkart");
-		//fetchAndInitInvoicesData();
-		connectToDB();
+	public boolean init() {
+				
+		return connectToDB();
 		/*if(isConnectedToDB) {
 			//TODO: Show connect failed message alert dialog box
 			fetchCollection();
@@ -48,10 +48,10 @@ public class MainHandler {
 		}*/
 	}
 	
-	public void setEcommercePlatform(String plateformName) {
-		CURRENT_ECOMM_PLATFORM_NAME = plateformName;		
+	public void setEcommercePlatform(String plateformName) {		
+		ConstantFields.CURRENT_ECOMM_PLATFORM_NAME = plateformName;		
 		fetchInvoicesCollection();
-		System.out.println(CURRENT_ECOMM_PLATFORM_NAME);
+		System.out.println(ConstantFields.CURRENT_ECOMM_PLATFORM_NAME);
 	}
 	
 	public void saveInvoicePdfToDB() {
@@ -59,37 +59,63 @@ public class MainHandler {
 			System.out.println("Not Connected To DB! May Be DB Server Is Down!");
 			return;
 		}
+		if(!isPlatformNameAvailable()) return;
 		fetchAndInitInvoicesData();		
 		storeAllInvoicesToDB();
 	}
 	
 	public void generateSpreadSheetBetween(String startDate, String endDate) {
-		try {			
-			getAllInvoicesBetween(startDate, endDate);
-			sheetHandler.generateInvoiceSpreadSheet();
+		try {
+			if(!isPlatformNameAvailable()) return;
+			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+			Date startDt = dateFormat.parse(startDate);  
+			Date endDt = dateFormat.parse(endDate);				
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(startDt);
+			String fromMonth = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
+			cal.setTime(endDt);
+			String tillMonth = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());			
+			getAllInvoicesBetween(startDt, endDt);
+			sheetHandler.generateInvoiceSpreadSheet(fromMonth, tillMonth);
+		} catch (ParseException pex) {			
+			OnlineStoreManager.showErrorMessage("Date Error", "Please Enter A Valid Date In DD-MM-YYYY Format!");					
 		} catch (IOException ioex) {
 			// TODO: handle exception
 			System.out.println("Failed To Create The Spread Sheet!");
-		}
+		} 
 	}
 	
-	private void connectToDB() {
+	private boolean isPlatformNameAvailable() {
+		boolean isAvailble = true;
+		if(ConstantFields.CURRENT_ECOMM_PLATFORM_NAME.contains(
+				ConstantFields.ECOMMERCE_PLATFORMS[0])) {
+			isAvailble = false;
+			OnlineStoreManager.showErrorMessage("No Platform Name", 
+					"Please Select A Valid Platform Name!");
+		}
+		return isAvailble;
+	}
+	
+	private void checkDBConnection() {
+		
+	}
+	
+	private boolean connectToDB() {
 		try {
-			dbHandler.connectToDB(dbName);
-			//TODO: Show connect successful message alert dialog box
-			System.out.println("Successfully Connected To DB!");			
-			isConnectedToDB = true;
+			dbHandler.connectToDB(dbName);					
+			isConnectedToDB = dbHandler.isConnectedToDB();
+			System.out.println("Successfully Connected To DB! " + isConnectedToDB);
 		} catch (RuntimeException rex) {
-			isConnectedToDB = false;
-			//TODO: Show connect failed message alert dialog box
-			System.out.println("Could Not Connect To DB. DB Server Might Be Down!");
-			rex.printStackTrace();
-		}		
+			isConnectedToDB = false;			
+			//rex.printStackTrace();
+		}
+		return isConnectedToDB;
 	}
 	
 	private void fetchInvoicesCollection() {		
 		try {
-			dbHandler.fetchCollection(CURRENT_ECOMM_PLATFORM_NAME + invoiceTableNameTag);
+			dbHandler.fetchCollection(ConstantFields.CURRENT_ECOMM_PLATFORM_NAME +
+					invoiceTableNameTag);
 			//TODO: Show connect successful message alert dialog box
 			System.out.println("Found The Collection!");
 		} catch (IllegalArgumentException e) {
@@ -120,10 +146,6 @@ public class MainHandler {
 			case ConstantFields.PDF_LOAD_READ_CLOSE_ERROR:
 				//TODO: Show error message
 				System.out.println("Load, Read or Close PDF File Error!");
-				break;
-			case ConstantFields.ECOMMERCE_PLATFORM_NOT_FOUND_ERROR:
-				//TODO: Show error message
-				System.out.println("Wrong File. No ECommerce Platform Found Error!");
 				break;
 			default:
 				//TODO: Show success message alert dialog box
@@ -178,17 +200,13 @@ public class MainHandler {
 		}		
 	}
 	
-	private void getAllInvoicesBetween(String startDate, String endDate) {
+	private void getAllInvoicesBetween(Date startDate, Date endDate) {
 		try {
 			SoldItemsCollection.get().addSoldItemDetailsList(
 					dbHandler.getInvoicesBetweenOrderDate(startDate, endDate));			
 			for(SoldItemDetails record : SoldItemsCollection.get().getSoldItemsDetailsList()) {
 				System.out.println(record.toString());
 			}						
-		} catch (ParseException e) {
-			System.out.println("Parse error : Couldn't Parse The Date");
-			// TODO: handle exception
-			e.printStackTrace();
 		} catch (NullPointerException npex) {
 			// TODO: handle exception
 			npex.printStackTrace();

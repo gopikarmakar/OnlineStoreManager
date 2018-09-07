@@ -1,27 +1,22 @@
 package com.hyend.project.EcommerceManager.handler;
 
-import java.awt.FileDialog;
-import java.awt.Frame;
 import java.io.File;
+import java.awt.Frame;
+import java.awt.FileDialog;
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
 import java.io.FileOutputStream;
 
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.usermodel.HSSFFontFormatting;
 import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
+import com.hyend.project.EcommerceManager.util.ConstantFields;
 import com.hyend.project.EcommerceManager.data.model.SoldItemDetails;
 import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
-import com.hyend.project.EcommerceManager.util.ConstantFields;
 
 public final class SpreadSheetHandler {
 	
@@ -31,27 +26,11 @@ public final class SpreadSheetHandler {
 		invoiceWorkbook = new HSSFWorkbook();
 	}
 	
-	/*public void generateSpreadSheet(String platform) throws IOException {
-		switch (platform.toLowerCase()) {
-			case "paytm":
-				break;
-			case "amazon":
-				break;
-			case "flipkart":
-				generateInvoiceSpreadSheet();
-				break;
-			case "snapdeal":
-				break;
-			case "shopclues":
-				break;
-			default:
-				break;
-		}
-	}*/
-	
-	public void generateInvoiceSpreadSheet() throws IOException, NullPointerException {		
+	public void generateInvoiceSpreadSheet(String fromMonth, String tillMonth) 
+			throws IOException, NullPointerException {		
+		
 		HSSFSheet spreadsheet = invoiceWorkbook.createSheet(
-				MainHandler.CURRENT_ECOMM_PLATFORM_NAME + "_sales_details");		
+				ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + "_sales_" + fromMonth + "_" + tillMonth);		
 		createHeadingRow(spreadsheet);
 		for(SoldItemDetails invoice: SoldItemsCollection.get().getSoldItemsDetailsList()) {
 			createValuesRow(spreadsheet, invoice);
