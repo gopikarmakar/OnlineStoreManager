@@ -9,11 +9,8 @@ import java.util.Locale;
 
 import com.hyend.project.EcommerceManager.data.model.SoldItemDetails;
 import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
-import com.hyend.project.EcommerceManager.gui.OnlineStoreManager;
+import com.hyend.project.EcommerceManager.main.OnlineStoreManager;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
-import com.mongodb.MongoBulkWriteException;
-import com.mongodb.MongoSocketException;
-import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoTimeoutException;
 
 public final class MainHandler {	
@@ -50,10 +47,10 @@ public final class MainHandler {
 			isConnected = dbHandler.isConnectedToDB();	
 		} catch (NullPointerException npex) {	
 			OnlineStoreManager.showErrorMessage("Connection Lost With MongoDB.", 
-					"Something's Wrong. Try Restarting MongoDB Server and This App Again!");
+				"Something's Wrong. Try Restarting MongoDB Server and This App Again!");
 		} catch (MongoTimeoutException e) {
 			OnlineStoreManager.showErrorMessage("Connection Lost With MongoDB.", 
-					"Try Restarting MongoDB Server and This App Again!");
+				"Try Restarting MongoDB Server and This App Again!");
 		} 
 		return isConnected;
 	}
@@ -77,81 +74,141 @@ public final class MainHandler {
 		try {
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;
+			System.out.println("Start Date" + startDate);
+			System.out.println("End Date" + endDate);
 			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 			Date startDt = dateFormat.parse(startDate);  
 			Date endDt = dateFormat.parse(endDate);				
-			Calendar cal = Calendar.getInstance();
+			/*Calendar cal = Calendar.getInstance();
 			cal.setTime(startDt);
 			String fromMonth = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
 			cal.setTime(endDt);
-			String tillMonth = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());			
+			String tillMonth = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());*/			
 			getAllInvoicesBetween(startDt, endDt);
-			sheetHandler.generateInvoiceSpreadSheet(fromMonth, tillMonth);
+			sheetHandler.generateInvoiceSpreadSheet();
 		} catch (ParseException pex) {			
 			OnlineStoreManager.showErrorMessage("Invalid Date", 
-					"Please Enter A Valid Date In DD-MM-YYYY Format!");					
+					"Please Enter A Valid Date In DD-MM-YYYY Format!");
+			return;
 		} catch (IOException ioex) {
 			// TODO: handle exception
 			System.out.println("Failed To Create The Spread Sheet!");
+			return;
 		} 
+	}
+	
+	public void generateSpreadSheetAllFromDB() {
+		
+	}
+	
+	public void updatePaymentStatusAsReceived(String orderId) {
+		try {
+			if(!isValidValue(orderId)) return;
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB()) return;
+			dbHandler.updatePaymentStatusAsReceived(orderId);
+		} catch (NullPointerException npex) {
+			showNoInvoiceFoundErrorMessage(orderId);
+			return;
+		}
 	}
 	
 	public void updateCourierStatusAsDelivered(String orderId) {
 		try {
 			if(!isValidValue(orderId)) return;
 			if(!isPlatformNameAvailable()) return;
-			if(!isConnectedToDB) return;
+			if(!isConnectedToDB()) return;
 			dbHandler.updateCourierStatusAsDelivered(orderId);
 		} catch (NullPointerException npex) {
 			showNoInvoiceFoundErrorMessage(orderId);
+			return;
 		}
 	}
 	
-	public void updateReturnStatusForOrderId(String orderId) {
+	public void updateReturnStatusFAsReturned(String orderId) {
 		try {
 			if(!isValidValue(orderId)) return;
 			if(!isPlatformNameAvailable()) return;
-			if(!isConnectedToDB) return;			
-			dbHandler.updateCourierStatusAsDelivered(orderId);
+			if(!isConnectedToDB()) return;	
+			dbHandler.updateReturnStatusAsReturned(orderId);
 		} catch (NullPointerException npex) {
 			showNoInvoiceFoundErrorMessage(orderId);
+			return;
 		}
 	}
 	
 	public void updateReturnRcvdDate(String orderId, String rcvdDate) {
 		try {
 			if(!isValidValue(orderId)) return;
-			if(!isPlatformNameAvailable()) return;
-			if(!isConnectedToDB) return;
 			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-			Date rcvdDt = dateFormat.parse(rcvdDate); 			
+			Date rcvdDt = dateFormat.parse(rcvdDate);
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB()) return;			 			
 			dbHandler.updateReturnRcvdDate(orderId, rcvdDt);
 		} catch (ParseException pex) {
 			OnlineStoreManager.showErrorMessage("Invalid Date", 
-					"Please Enter A Valid Date In DD-MM-YYYY Format!");	
+					"Please Enter A Valid Date In DD-MM-YYYY Format and Try Again");
+			return;
 		} 
 		catch (NullPointerException npex) {
 			showNoInvoiceFoundErrorMessage(orderId);
+			return;
 		}
 	}
 	
 	public void updateReturnCondition(String orderId, String condition) {
 		try {
 			if(!isValidValue(orderId)) return;
-			if(!isValidValue(condition)) return;
+			if(!isValidReturnCondition(condition)) return;
 			if(!isPlatformNameAvailable()) return;
-			if(!isConnectedToDB) return;			
+			if(!isConnectedToDB()) return;			
 			dbHandler.updateReturnCondition(orderId, condition);
 		} catch (NullPointerException npex) {
 			showNoInvoiceFoundErrorMessage(orderId);
+			return;
 		}
 	}
+	
+	public void deleteAllPaymentStatusAsReceived() {
+		try {
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB()) return;			
+			dbHandler.deleteAllPaymentStatusAsReceived();
+		} catch (NullPointerException npex) {
+			showNoInvoiceFoundToDeleteErrorMessage();
+			return;
+		}
+	}
+	
+	public void deleteAllCourierStatusAsDelivered() {
+		try {
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB()) return;			
+			dbHandler.deleteAllCourierStatusAsDelivered();
+		} catch (NullPointerException npex) {
+			showNoInvoiceFoundToDeleteErrorMessage();
+			return;
+		}
+	}
+	
+	public void deleteAllCourierStatusAsReturned() {
+		try {
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB()) return;			
+			dbHandler.deleteAllCourierStatusAsReturned();
+		} catch (NullPointerException npex) {
+			showNoInvoiceFoundToDeleteErrorMessage();
+			return;
+		}
+	}
+	
 	
 	private void connectToDB() {
 		try {
 			dbHandler.connectToDB(dbName);		
 		} catch (RuntimeException rex) {			
 			rex.printStackTrace();
+			return;
 		}
 	}
 	
@@ -161,6 +218,7 @@ public final class MainHandler {
 					invoiceTableNameTag);
 		} catch (IllegalArgumentException e) {			
 			System.out.println("Couldn't Find The Collection!");
+			return;
 		}
 	}
 	
@@ -170,21 +228,39 @@ public final class MainHandler {
 				ConstantFields.ECOMMERCE_PLATFORMS[0])) {
 			isAvailble = false;
 			OnlineStoreManager.showErrorMessage("No Platform Name", 
-					"Please Select A Valid Platform Name!");
+					"Please Select A Valid Platform Name and Try Again!");
 		}
 		return isAvailble;
 	}
 	
 	private boolean isValidValue(String value) {
-		if(value == null || value.isEmpty())
+		if(value == null || value.isEmpty()) {
+			OnlineStoreManager.showErrorMessage("Wrong Value", 
+					"Order Id or Return Received Date Can't Be Null" + 
+					"Please Enter Correct Value and Try Again!");
 			return false;
+		}
 		return true;
+	}
+	
+	private boolean isValidReturnCondition(String condition) {
+		if(condition.equals("")) {
+			OnlineStoreManager.showErrorMessage("Wrong Return Condition", 					
+					"Please Select A Valid Return Condition and Try Again!");
+			return false;
+		}
+		return true;
+	}
+	
+	private void showNoInvoiceFoundToDeleteErrorMessage() {
+		OnlineStoreManager.showErrorMessage("No Invoice Found", 
+				"No Invoice Found To Delete. All Up To Date!");
 	}
 	
 	private void showNoInvoiceFoundErrorMessage(String orderId) {
 		OnlineStoreManager.showErrorMessage("No Invoice Found", 
 				"No Invoice Found For Order Id = " + orderId + "\n" +
-				"Please Enter A Valid Order Id");
+				"Please Enter A Valid Order Id and Try Again");
 	}
 		
 	private void fetchAndInitInvoicesData() {
@@ -193,29 +269,29 @@ public final class MainHandler {
 			case ConstantFields.PDF_NULL_FILE_ERROR:				
 				//TODO: Show error message
 				System.out.println("Please Choose At Least A File!");
-				break;
+				return;
 			case ConstantFields.PDF_NO_PAGES_ERROR:
 				//TODO: Show error message
 				System.out.println("There No Pages In PDF File Error!");
-				break;
+				return;
 			case ConstantFields.PDF_ENCRYPTED_ERROR:
 				//TODO: Show error message
 				System.out.println("PDF File Is Encrypted Error!");
-				break;
+				return;
 			case ConstantFields.NOT_A_PDF_FILE_ERROR:
 				//TODO: Show error message
 				System.out.println("It's Not A PDF File Error!");
-				break;
+				return;
 			case ConstantFields.PDF_LOAD_READ_CLOSE_ERROR:
 				//TODO: Show error message
 				System.out.println("Load, Read or Close PDF File Error!");
-				break;
+				return;
 			default:
 				//TODO: Show success message alert dialog box
 				System.out.println(MainHandler.CURRENT_FILE_LOCATION + 
 								   MainHandler.CURRENT_FILE_NAME + 
 								   " File Read & Parsed Successfully!");
-				break;
+				return;
 		}
 	}
 	
@@ -223,12 +299,13 @@ public final class MainHandler {
 		try {
 			dbHandler.insertAllToCollection();
 			OnlineStoreManager.showInfoMessage("File Saved", 
-					"File Data Stored Successfully!");
+					"Invoice Data Stored To DB Successfully!");
 		} catch (RuntimeException rex) {
 			if(rex.getMessage().contains("duplicate key error")) {
 				OnlineStoreManager.showErrorMessage("Duplicate File Error", 
-						"This File's Saved Already. Please Select A New File!");
+						"This File's Saved Already. Please Select A New File!");				
 			}
+			return;
 		}		
 	}
 	
@@ -241,6 +318,7 @@ public final class MainHandler {
 			// TODO: handle exception
 			npex.printStackTrace();
 			System.out.println("No Invoices Found");
+			return;
 		}		
 	}
 	
@@ -251,6 +329,7 @@ public final class MainHandler {
 		} catch (NullPointerException npex) {
 			// TODO: handle exception
 			System.out.println("No Invoice Found For Order Id = " + orderId);
+			return;
 		}		
 	}
 	
@@ -261,6 +340,7 @@ public final class MainHandler {
 		} catch (NullPointerException npex) {
 			// TODO: handle exception
 			System.out.println("No Invoice Found For Invoice Number = " + invoiceId);
+			return;
 		}		
 	}
 	
@@ -275,8 +355,7 @@ public final class MainHandler {
 			// TODO: handle exception
 			npex.printStackTrace();
 			System.out.println("No Invoice Found Between " + startDate + " and " + endDate + " Dates.");
+			return;
 		}
 	}
-	
-	
 }

@@ -115,6 +115,16 @@ public final class DatabaseHandler {
 		return SoldItemDetails.fromDocument(document);
 	}
 	
+	public void updatePaymentStatusAsReceived(String orderId) throws NullPointerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
+				ConstantFields.ORDER_ID_FIELD, orderId));
+		Document doc = new Document("$set", new Document(
+				ConstantFields.PAYMENT_DETAILS + "." + 
+				ConstantFields.PAYMENT_STATUS_FIELD, 
+				ConstantFields.PAYMENT_STATUS_RECEIVED));
+		dbCollection.updateOne(filter, doc);
+	}
+	
 	public void updateCourierStatusAsDelivered(String orderId) throws NullPointerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
 				ConstantFields.ORDER_ID_FIELD, orderId));
@@ -125,13 +135,22 @@ public final class DatabaseHandler {
 		dbCollection.updateOne(filter, doc);
 	}
 	
-	public void updateReturnStatusReturned(String orderId) throws NullPointerException {
+	public void updateReturnStatusAsReturned(String orderId) throws NullPointerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
 				ConstantFields.ORDER_ID_FIELD, orderId));
 		Document doc = new Document("$set", new Document(
 				ConstantFields.COURIER_DETAILS + "." + 
 				ConstantFields.COURIER_RETURN_STATUS_FIELD, 
 				ConstantFields.COURIER_RETURN_STATUS_RETURNED));
+		dbCollection.updateOne(filter, doc);
+	}
+	
+	public void updateReturnCondition(String orderId, String condition) throws NullPointerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
+				ConstantFields.ORDER_ID_FIELD, orderId));
+		Document doc = new Document("$set", new Document(
+				ConstantFields.COURIER_DETAILS + "." + 
+				ConstantFields.COURIER_RETURN_CONDITION_FIELD, condition));
 		dbCollection.updateOne(filter, doc);
 	}
 	
@@ -144,13 +163,25 @@ public final class DatabaseHandler {
 		dbCollection.updateOne(filter, doc);
 	}
 	
-	public void updateReturnCondition(String orderId, String condition) throws NullPointerException {
-		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
-				ConstantFields.ORDER_ID_FIELD, orderId));
-		Document doc = new Document("$set", new Document(
-				ConstantFields.COURIER_DETAILS + "." + 
-				ConstantFields.COURIER_RETURN_RCVD_DATE_FIELD, condition));
-		dbCollection.updateOne(filter, doc);
+	public void deleteAllPaymentStatusAsReceived() throws NullPointerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.PAYMENT_DETAILS + "." +
+				ConstantFields.PAYMENT_STATUS_FIELD, 
+				ConstantFields.PAYMENT_STATUS_RECEIVED));		
+		dbCollection.deleteMany(filter);
+	}
+	
+	public void deleteAllCourierStatusAsDelivered() throws NullPointerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.COURIER_DETAILS + "." +
+				ConstantFields.COURIER_STATUS_FIELD, 
+				ConstantFields.COURIER_STATUS_DELIVERED));		
+		dbCollection.deleteMany(filter);
+	}
+	
+	public void deleteAllCourierStatusAsReturned() throws NullPointerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.COURIER_DETAILS + "." +
+				ConstantFields.COURIER_RETURN_STATUS_FIELD, 
+				ConstantFields.COURIER_RETURN_STATUS_RETURNED));		
+		dbCollection.deleteMany(filter);
 	}
 	
 	public List<SoldItemDetails> getInvoicesBetweenOrderDate(

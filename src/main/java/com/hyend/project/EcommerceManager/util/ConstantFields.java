@@ -10,6 +10,12 @@ public class ConstantFields {
 		"snapdeal", "shopclues"
 	};
 	
+	public static final String[] COURIER_RETURN_CONDITIONS = {
+			"Select Return Condition",
+			"Returned By Customer",
+			"Returned From Delivery"
+	};
+	
 	/**
 	 * Spread Sheet Column Fields
 	 */
@@ -39,6 +45,9 @@ public class ConstantFields {
 	 */	 
 	public static final String PAYMENT_METHOD_COD = "cod";
 	public static final String PAYMENT_METHOD_PREPAID = "prepaid";
+	public static final String PAYMENT_STATUS_RECEIVED = "received";
+	public static final String PAYMENT_STATUS_IN_PROCESS = "in-process";
+	
 	
 	/**
 	 * Courier Statuses
@@ -46,6 +55,8 @@ public class ConstantFields {
 	public static final String COURIER_STATUS_DELIVERED = "delivered";
 	public static final String COURIER_STATUS_IN_TRANSIT = "in-transit";
 	public static final String COURIER_RETURN_STATUS_RETURNED = "returned";
+	public static final String COURIER_RETURN_BY_CUSTOMER = "";
+	public static final String COURIER_RETURN_FROM_DELIVERY = "";
 	
 	/**
 	 * ECommerce Platform
@@ -71,8 +82,9 @@ public class ConstantFields {
 	/**
 	 * Payments Fields
 	 */	
-	public static final String PAYMENT_DETAILS = "payment_details";
+	public static final String PAYMENT_DETAILS = "payment_details";	
 	public static final String TOTAL_AMOUNT_FIELD = "total_amount";
+	public static final String PAYMENT_STATUS_FIELD = "payment_status";
 	public static final String PAYMENT_METHOD_FIELD = "payment_method";
 	public static final String SHIPPING_CHARGE_FIELD = "shipping_charge";
 	

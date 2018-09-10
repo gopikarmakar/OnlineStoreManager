@@ -220,8 +220,9 @@ public class SoldItemDetails {
     		.append(ConstantFields.COURIER_RETURN_CONDITION_FIELD, courierDetails.getCourierReturnCondition()))
 		.append(ConstantFields.PAYMENT_DETAILS, new Document()
     		.append(ConstantFields.TOTAL_AMOUNT_FIELD, paymentDetails.getTotalAmount())
+    		.append(ConstantFields.PAYMENT_STATUS_FIELD, paymentDetails.getPaymentStatus())
     		.append(ConstantFields.PAYMENT_METHOD_FIELD, paymentDetails.getPaymentMethod())
-    		.append(ConstantFields.SHIPPING_CHARGE_FIELD, paymentDetails.getShippingCharge()))
+    		.append(ConstantFields.SHIPPING_CHARGE_FIELD, paymentDetails.getShippingCharge()))			
         .append(ConstantFields.TAX_DETAILS, new Document()
 			.append(ConstantFields.GST_RATE_FIELD, taxDetails.getGSTRate())
 			.append(ConstantFields.GST_AMOUNT_FIELD, taxDetails.getGSTAmount())
@@ -275,6 +276,7 @@ public class SoldItemDetails {
 		
 		Document amountDoc = (Document) document.get(ConstantFields.PAYMENT_DETAILS);
 		soldItemDetails.paymentDetails.setTotalAmount(amountDoc.getDouble(ConstantFields.TOTAL_AMOUNT_FIELD));
+		soldItemDetails.paymentDetails.setPaymentStatus(amountDoc.getString(ConstantFields.PAYMENT_STATUS_FIELD)); 
 		soldItemDetails.paymentDetails.setPaymentMethod(amountDoc.getString(ConstantFields.PAYMENT_METHOD_FIELD));		
 		soldItemDetails.paymentDetails.setShippingCharge(amountDoc.getDouble(ConstantFields.SHIPPING_CHARGE_FIELD));
 		
@@ -483,6 +485,7 @@ public class SoldItemDetails {
 		private Double totalAmount = 0.0;	
 		private String paymentMethod = "NA";
 		private Double shippingCharge = 0.0;
+		private String paymentStatus = ConstantFields.PAYMENT_STATUS_IN_PROCESS;
 
 		public PaymentDetails() {}
 		
@@ -508,6 +511,14 @@ public class SoldItemDetails {
 		
 		public double getShippingCharge() {
 			return this.shippingCharge;
+		}
+		
+		public void setPaymentStatus(String paymentStatus) {
+			this.paymentStatus = paymentStatus;
+		}
+		
+		public String getPaymentStatus() {
+			return this.paymentStatus;
 		}
 	}
 	
@@ -576,9 +587,9 @@ public class SoldItemDetails {
 		private Date courierReturnRcvdDate = null;
 		private String courierName = "NA";
 		private String courierReturnStatus = "NA";	
-		private String courierTrackingNumber = "NA";	
-		private String courierReturnCondition = "NA";
+		private String courierTrackingNumber = "NA";			
 		private String courierStatus = ConstantFields.COURIER_STATUS_IN_TRANSIT;
+		private String courierReturnCondition = ConstantFields.COURIER_RETURN_CONDITIONS[0];
 
 		public CourierDetails() {
 			//this.courierReturnRcvdDate = new MyDate();

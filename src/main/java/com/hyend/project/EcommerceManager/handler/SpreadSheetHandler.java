@@ -20,20 +20,19 @@ import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
 
 public final class SpreadSheetHandler {
 	
+	private final String sheetTag = "_sales_details";
 	private HSSFWorkbook invoiceWorkbook;
 
 	public SpreadSheetHandler(MainHandler dataHandler) {
 		invoiceWorkbook = new HSSFWorkbook();
 	}
 	
-	public void generateInvoiceSpreadSheet(String fromMonth, String tillMonth) 
-			throws IOException, NullPointerException {		
-		
-		HSSFSheet spreadsheet = invoiceWorkbook.createSheet(
-				ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + "_sales_" + fromMonth + "_" + tillMonth);		
-		createHeadingRow(spreadsheet);
+	public void generateInvoiceSpreadSheet() 
+			throws IOException, NullPointerException {
+				
+		createHeadingRow(getSheet());
 		for(SoldItemDetails invoice: SoldItemsCollection.get().getSoldItemsDetailsList()) {
-			createValuesRow(spreadsheet, invoice);
+			createValuesRow(getSheet(), invoice);
 		}
 		FileDialog dialog = new FileDialog(new Frame(), "Save", FileDialog.SAVE);
 	    dialog.setVisible(true);
@@ -46,6 +45,14 @@ public final class SpreadSheetHandler {
 	    out.close();	    
 	    invoiceWorkbook.close();
 	    System.out.println(file.getName() + " File Written Successfully!");
+	}
+	
+	private HSSFSheet getSheet() {
+		
+		HSSFSheet spreadsheet = invoiceWorkbook.createSheet(
+				ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + sheetTag);
+		
+		return spreadsheet;
 	}
 	
 	private HSSFFont getHeardingRowFont() {
