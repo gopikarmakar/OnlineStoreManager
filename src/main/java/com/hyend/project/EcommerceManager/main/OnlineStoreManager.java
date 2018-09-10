@@ -122,10 +122,10 @@ public class OnlineStoreManager {
 		lblHyendStore.setBounds(204, 24, 81, 16);
 		mainWindowFrame.getContentPane().add(lblHyendStore);
 		
-		Panel fileReadAndCreatePanel = new Panel();
+		/*Panel fileReadAndCreatePanel = new Panel();
 		fileReadAndCreatePanel.setLayout(null);
 		fileReadAndCreatePanel.setBounds(23, 55, 454, 160);
-		mainWindowFrame.getContentPane().add(fileReadAndCreatePanel);
+		mainWindowFrame.getContentPane().add(fileReadAndCreatePanel);*/
 		
 		final JComboBox<String> ecommPlatforms = new JComboBox<String>();
 		for(String item: ConstantFields.ECOMMERCE_PLATFORMS) {
@@ -178,10 +178,10 @@ public class OnlineStoreManager {
 		sheetForDelivered.setBounds(275, 169, 177, 35);
 		mainWindowFrame.getContentPane().add(sheetForDelivered);
 				
-		Panel updateDataPanel = new Panel();
+		/*Panel updateDataPanel = new Panel();
 		updateDataPanel.setBounds(23, 225, 454, 245);
 		mainWindowFrame.getContentPane().add(updateDataPanel);
-		updateDataPanel.setLayout(null);
+		updateDataPanel.setLayout(null);*/
 		
 		final JTextField orderId = new JTextField();
 		orderId.setBounds(132, 240, 243, 30);

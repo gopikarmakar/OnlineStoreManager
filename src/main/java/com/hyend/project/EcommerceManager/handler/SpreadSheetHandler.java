@@ -20,25 +20,55 @@ import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
 
 public final class SpreadSheetHandler {
 	
-	private final String sheetTag = "_sales_details";
-	private HSSFWorkbook invoiceWorkbook;
-
-	public SpreadSheetHandler(MainHandler dataHandler) {
-		invoiceWorkbook = new HSSFWorkbook();
-	}
+	private final String sheetTagForDate = "_sales_details_";
+	private final String sheetTagForPaymentReceived = "_sales_details_for_payment_received";
+	private final String sheetTagForCourierReturned = "_sales_details_for_courier_returned";
+	private final String sheetTagForCourierDelivered = "_sales_details_for_courier_delivered";
 	
-	public void generateInvoiceSpreadSheet() 
+	private String absoluteFileName = "";
+	private HSSFWorkbook invoiceWorkbook = null;
+
+	public SpreadSheetHandler(MainHandler dataHandler) {}
+	
+	public void generateInvoiceSheetForDates(String startDate, String EndDate) 
 			throws IOException, NullPointerException {
 				
-		createHeadingRow(getSheet());
+		openSaveAsDialogBox();		
+		String sheetName = ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + 
+							sheetTagForDate + startDate + "_" + EndDate;
+		createSpreadsheet(sheetName);
+		createWorkbook();
+	}
+	
+	public void generateInvoiceSheetForPaymentReceived() 
+			throws IOException, NullPointerException {
+				
+		openSaveAsDialogBox();		
+		String sheetName = ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + 
+							sheetTagForPaymentReceived;
+		createSpreadsheet(sheetName);
+		createWorkbook();
+	}
+	
+	private void createSpreadsheet(String sheetName) {
+		invoiceWorkbook = new HSSFWorkbook();
+		HSSFSheet sheet = getSheet(sheetName);
+		createHeadingRow(sheet);
 		for(SoldItemDetails invoice: SoldItemsCollection.get().getSoldItemsDetailsList()) {
-			createValuesRow(getSheet(), invoice);
+			createValuesRow(sheet, invoice);
 		}
+	}
+	
+	private void openSaveAsDialogBox() throws NullPointerException {
 		FileDialog dialog = new FileDialog(new Frame(), "Save", FileDialog.SAVE);
 	    dialog.setVisible(true);
-	    String dir = dialog.getDirectory();
+	    String filePath = dialog.getDirectory();
         String fileName = (dialog.getFile().contains(".xls")) ? dialog.getFile() : dialog.getFile() + ".xls";
-        File file = new File(dir + fileName);
+        absoluteFileName = (filePath + fileName);
+	}
+	
+	private void createWorkbook() throws IOException {		
+		File file = new File(absoluteFileName);
         file.createNewFile();
         FileOutputStream out = new FileOutputStream(file);
 	    invoiceWorkbook.write(out);
@@ -47,12 +77,12 @@ public final class SpreadSheetHandler {
 	    System.out.println(file.getName() + " File Written Successfully!");
 	}
 	
-	private HSSFSheet getSheet() {
-		
-		HSSFSheet spreadsheet = invoiceWorkbook.createSheet(
-				ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + sheetTag);
-		
-		return spreadsheet;
+	private HSSFSheet getSheet(String name) {
+		HSSFSheet sheet = invoiceWorkbook.getSheet(name);
+		if(invoiceWorkbook.getSheet(name) == null) {
+			sheet = invoiceWorkbook.createSheet(name);
+		}		
+		return sheet;
 	}
 	
 	private HSSFFont getHeardingRowFont() {

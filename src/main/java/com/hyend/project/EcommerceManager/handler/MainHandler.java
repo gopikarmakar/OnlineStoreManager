@@ -85,7 +85,7 @@ public final class MainHandler {
 			cal.setTime(endDt);
 			String tillMonth = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());*/			
 			getAllInvoicesBetween(startDt, endDt);
-			sheetHandler.generateInvoiceSpreadSheet();
+			sheetHandler.generateInvoiceSheetForDates(startDate, endDate);
 		} catch (ParseException pex) {			
 			OnlineStoreManager.showErrorMessage("Invalid Date", 
 					"Please Enter A Valid Date In DD-MM-YYYY Format!");
@@ -306,6 +306,12 @@ public final class MainHandler {
 						"This File's Saved Already. Please Select A New File!");				
 			}
 			return;
+		} finally {
+			/**
+			 * Clearing the previous records to avoid 
+			 * duplicated.
+			 */
+			SoldItemsCollection.get().clear();
 		}		
 	}
 	

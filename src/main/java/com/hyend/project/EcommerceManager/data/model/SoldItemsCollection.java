@@ -31,6 +31,11 @@ public final class SoldItemsCollection {
 		return soldItemsCollection.isEmpty();
 	}
 	
+	public void clear() {
+		if(!isEmpty())
+			soldItems.clear();
+	}
+	
 	public void addSoldItemDetails(String key, SoldItemDetails soldItemDetails) {
 		soldItems.put(key, soldItemDetails);
 	}
