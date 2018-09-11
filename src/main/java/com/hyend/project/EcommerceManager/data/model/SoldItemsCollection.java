@@ -28,7 +28,7 @@ public final class SoldItemsCollection {
 	}
 	
 	public boolean isEmpty() {
-		return soldItemsCollection.isEmpty();
+		return soldItems.isEmpty();
 	}
 	
 	public void clear() {

@@ -172,7 +172,8 @@ public class OnlineStoreManager {
 		
 		JButton sheetForPaymentRcvd = new JButton("Payments Received Sheet");
 		sheetForPaymentRcvd.setBounds(44, 169, 184, 35);
-		mainWindowFrame.getContentPane().add(sheetForPaymentRcvd);		
+		mainWindowFrame.getContentPane().add(sheetForPaymentRcvd);
+		
 		
 		JButton sheetForDelivered = new JButton("Courier Delivered Sheet");
 		sheetForDelivered.setBounds(275, 169, 177, 35);
@@ -194,7 +195,7 @@ public class OnlineStoreManager {
 		updatePaymentStatusBtn.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainHandler.updateCourierStatusAsDelivered(orderId.getText());;
+				mainHandler.updatePaymentStatusAsReceived(orderId.getText());
 			}
 		});
 		

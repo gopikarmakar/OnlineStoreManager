@@ -26,8 +26,18 @@ public class ConstantFields {
 		"Courier Return Rcvd Date", "Courier Return Condition" 
 	};
 	
+	/**
+	 * Default Ecommerce Name
+	 */
 	public static String CURRENT_ECOMM_PLATFORM_NAME = 
 			ConstantFields.ECOMMERCE_PLATFORMS[0];
+	
+	/**
+	 * Error Messages
+	 */
+	public static final String NO_MATCH_FOUND_ERROR = "no_match_found";
+	public static final String NO_RECORDS_FOUND_ERROR = "no_records_found";
+	public static final String ALREADY_UPDATED_ERROR = "record_already_updated";
 	
 	/**
 	 * PDF File Read Fail Error Codes.
