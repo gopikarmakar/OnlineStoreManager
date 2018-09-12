@@ -161,7 +161,7 @@ public final class PDFInvoiceHandler {
         	String[] keys = getInvoiceKeysToFetch();
             for (String line : lines) {            	
             	for(String key : keys) {
-                	if(line.toLowerCase().contains(key.toLowerCase())) {
+                	if(line.toLowerCase().contains(key.toLowerCase())) {                		
                 		soldItemDetails.mapDetails(key, line.substring(key.length()));                		
                 	}               	
                 }

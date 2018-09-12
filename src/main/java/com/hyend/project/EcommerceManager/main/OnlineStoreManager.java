@@ -15,6 +15,8 @@ import javax.swing.BorderFactory;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 
 import com.hyend.project.EcommerceManager.handler.MainHandler;
 import com.hyend.project.EcommerceManager.util.ConstantFields;
@@ -146,19 +148,19 @@ public class OnlineStoreManager {
 		savePDFButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainHandler.saveInvoicePdfToDB();
+				mainHandler.storeInvoicePdfToDB();
 			}
 		});
 		
-		final JTextField startDate = new JTextField();
-		startDate.setColumns(10);
-		startDate.setBounds(23, 128, 141, 26);
-		mainWindowFrame.getContentPane().add(startDate);
+		final JTextField startDateTF = new HintedTextField("DD-MM-YYYY");
+		startDateTF.setColumns(10);
+		startDateTF.setBounds(23, 128, 141, 26);
+		mainWindowFrame.getContentPane().add(startDateTF);
 		
-		final JTextField endDate = new JTextField();
-		endDate.setColumns(10);
-		endDate.setBounds(336, 128, 141, 26);
-		mainWindowFrame.getContentPane().add(endDate);
+		final JTextField endDateTF = new HintedTextField("DD-MM-YYYY");
+		endDateTF.setColumns(10);
+		endDateTF.setBounds(336, 128, 141, 26);
+		mainWindowFrame.getContentPane().add(endDateTF);
 		
 		JButton excelByDate = new JButton("Create Spreadsheet");
 		excelByDate.setBounds(176, 123, 150, 35);
@@ -166,28 +168,44 @@ public class OnlineStoreManager {
 		excelByDate.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainHandler.generateSpreadSheetBetween(startDate.getText(), endDate.getText());
+				String startDate = startDateTF.getText().replaceAll("\\s+","");
+				String endDate = endDateTF.getText().replaceAll("\\s+","");
+				mainHandler.generateSpreadSheet(ConstantFields.GENERATE_FOR_DATES,
+						startDate, endDate);
 			}
 		});
 		
 		JButton sheetForPaymentRcvd = new JButton("Payments Received Sheet");
 		sheetForPaymentRcvd.setBounds(44, 169, 184, 35);
 		mainWindowFrame.getContentPane().add(sheetForPaymentRcvd);
-		
+		sheetForPaymentRcvd.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mainHandler.generateSpreadSheet(ConstantFields.GENERATE_FOR_PAYMENT_RECEIVED,
+						"", "");
+			}
+		});
 		
 		JButton sheetForDelivered = new JButton("Courier Delivered Sheet");
 		sheetForDelivered.setBounds(275, 169, 177, 35);
 		mainWindowFrame.getContentPane().add(sheetForDelivered);
+		sheetForDelivered.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mainHandler.generateSpreadSheet(ConstantFields.GENERATE_FOR_COURIER_DELIVERED,
+						"", "");	
+			}
+		});
 				
 		/*Panel updateDataPanel = new Panel();
 		updateDataPanel.setBounds(23, 225, 454, 245);
 		mainWindowFrame.getContentPane().add(updateDataPanel);
 		updateDataPanel.setLayout(null);*/
 		
-		final JTextField orderId = new JTextField();
-		orderId.setBounds(132, 240, 243, 30);
-		mainWindowFrame.getContentPane().add(orderId);
-		orderId.setColumns(10);
+		final JTextField orderIdTF = new HintedTextField("Enter Order Id");
+		orderIdTF.setBounds(132, 240, 243, 30);
+		mainWindowFrame.getContentPane().add(orderIdTF);
+		orderIdTF.setColumns(10);
 		
 		JButton updatePaymentStatusBtn = new JButton("Update Payment Received");
 		updatePaymentStatusBtn.setBounds(158, 278, 187, 35);
@@ -195,7 +213,8 @@ public class OnlineStoreManager {
 		updatePaymentStatusBtn.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainHandler.updatePaymentStatusAsReceived(orderId.getText());
+				String orderId = orderIdTF.getText().replaceAll("\\s+","");
+				mainHandler.updatePaymentStatusAsReceived(orderId);
 			}
 		});
 		
@@ -205,7 +224,8 @@ public class OnlineStoreManager {
 		updateReturnStatusBtn.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainHandler.updateReturnStatusFAsReturned(orderId.getText());
+				String orderId = orderIdTF.getText().replaceAll("\\s+","");
+				mainHandler.updateReturnStatusAsReturned(orderId);
 			}
 		});
 		
@@ -215,25 +235,55 @@ public class OnlineStoreManager {
 		updateCourierStatusBtn.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				mainHandler.updateCourierStatusAsDelivered(orderId.getText());;
+				String orderId = orderIdTF.getText().replaceAll("\\s+","");
+				mainHandler.updateCourierStatusAsDelivered(orderId);;
 			}
 		});
 		
-		JComboBox<String> updateReturnCondition = new JComboBox<String>();
-		updateReturnCondition.setBounds(136, 380, 239, 30);
+		final JComboBox<String> updateReturnCondition = new JComboBox<String>();
+		updateReturnCondition.setBounds(44, 383, 219, 30);
 		for(String item: ConstantFields.COURIER_RETURN_CONDITIONS) {
 			updateReturnCondition.addItem(item);
 		}
 		mainWindowFrame.getContentPane().add(updateReturnCondition);
+		updateReturnCondition.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent platform) {
+				String orderId = orderIdTF.getText().replaceAll("\\s+","");
+				mainHandler.updateReturnCondition(orderId,
+						String.valueOf(updateReturnCondition.getSelectedItem()));
+			}
+		});
 		
-		final JTextField returnRcvdDate = new JTextField();
+		final JComboBox<String> updatePaymentMode = new JComboBox<String>();
+		updatePaymentMode.setBounds(275, 383, 192, 30);
+		for(String item: ConstantFields.PAYMENT_MODES) {
+			updatePaymentMode.addItem(item);
+		}
+		mainWindowFrame.getContentPane().add(updatePaymentMode);
+		updatePaymentMode.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent platform) {
+				String orderId = orderIdTF.getText().replaceAll("\\s+","");
+				mainHandler.updatePaymentMode(orderId,
+						String.valueOf(updatePaymentMode.getSelectedItem()));
+			}
+		});
+		
+		final JTextField returnRcvdDate = new HintedTextField("Enter Return Date");
 		returnRcvdDate.setBounds(44, 425, 210, 30);
 		mainWindowFrame.getContentPane().add(returnRcvdDate);
 		returnRcvdDate.setColumns(10);
 		
 		JButton updateReturnRcvdDateBtn = new JButton("Update Return Rceived Date");
-		updateReturnRcvdDateBtn.setBounds(261, 420, 201, 35);
+		updateReturnRcvdDateBtn.setBounds(261, 424, 201, 35);
 		mainWindowFrame.getContentPane().add(updateReturnRcvdDateBtn);
+		updateReturnRcvdDateBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String orderId = orderIdTF.getText().replaceAll("\\s+","");
+				mainHandler.updateReturnRcvdDate(orderId, returnRcvdDate.getText());
+				
+			}
+		});
 		
 		Panel panel = new Panel();
 		panel.setLayout(null);
@@ -263,11 +313,48 @@ public class OnlineStoreManager {
 		JButton deleteAllCourierStatusReturnedBtn = new JButton("Delete All Returned");
 		deleteAllCourierStatusReturnedBtn.setBounds(281, 59, 150, 35);
 		panel.add(deleteAllCourierStatusReturnedBtn);
+		JComboBox<String> comboBox = new JComboBox<String>();
+		comboBox.setBounds(275, 383, 192, 30);
+		mainWindowFrame.getContentPane().add(comboBox);
 		deleteAllCourierStatusReturnedBtn.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				mainHandler.deleteAllCourierStatusAsReturned();				
 			}
-		});
-	}	
+		});		
+	}
+	
+	final class HintedTextField extends JTextField implements FocusListener {
+
+		private final String hint;
+		private boolean showingHint;
+
+		public HintedTextField(final String hint) {
+			super(hint);
+			this.hint = hint;
+			this.showingHint = true;
+			super.addFocusListener(this);
+		}
+
+		@Override
+		public void focusGained(FocusEvent e) {
+			if(this.getText().isEmpty()) {
+				super.setText("");
+				showingHint = false;
+			}
+		}
+		
+		@Override
+		public void focusLost(FocusEvent e) {
+			if(this.getText().isEmpty()) {
+				super.setText(hint);
+				showingHint = true;
+			}
+		}
+
+		@Override
+		public String getText() {
+			return showingHint ? "" : super.getText();
+		}
+	}
 }

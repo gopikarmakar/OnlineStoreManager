@@ -20,32 +20,17 @@ import com.hyend.project.EcommerceManager.data.model.SoldItemsCollection;
 
 public final class SpreadSheetHandler {
 	
-	private final String sheetTagForDate = "_sales_details_";
-	private final String sheetTagForPaymentReceived = "_sales_details_for_payment_received";
-	private final String sheetTagForCourierReturned = "_sales_details_for_courier_returned";
-	private final String sheetTagForCourierDelivered = "_sales_details_for_courier_delivered";
+	private final String sheetTagForDate = "_sales_report";
 	
-	private String absoluteFileName = "";
 	private HSSFWorkbook invoiceWorkbook = null;
 
 	public SpreadSheetHandler(MainHandler dataHandler) {}
 	
-	public void generateInvoiceSheetForDates(String startDate, String EndDate) 
+	public void generateInvoiceSheetForDates() 
 			throws IOException, NullPointerException {
 				
 		openSaveAsDialogBox();		
-		String sheetName = ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + 
-							sheetTagForDate + startDate + "_" + EndDate;
-		createSpreadsheet(sheetName);
-		createWorkbook();
-	}
-	
-	public void generateInvoiceSheetForPaymentReceived() 
-			throws IOException, NullPointerException {
-				
-		openSaveAsDialogBox();		
-		String sheetName = ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + 
-							sheetTagForPaymentReceived;
+		String sheetName = ConstantFields.CURRENT_ECOMM_PLATFORM_NAME + sheetTagForDate;
 		createSpreadsheet(sheetName);
 		createWorkbook();
 	}
@@ -54,27 +39,34 @@ public final class SpreadSheetHandler {
 		invoiceWorkbook = new HSSFWorkbook();
 		HSSFSheet sheet = getSheet(sheetName);
 		createHeadingRow(sheet);
+		int totalItemsSold = 0;
+		double grossAmount = 0.0;
 		for(SoldItemDetails invoice: SoldItemsCollection.get().getSoldItemsDetailsList()) {
+			totalItemsSold += invoice.orderDetails.getTotalQuantity();
+			grossAmount += invoice.paymentDetails.getTotalAmount();
 			createValuesRow(sheet, invoice);
 		}
+		createSummaryRow(sheet, totalItemsSold, grossAmount);
 	}
 	
 	private void openSaveAsDialogBox() throws NullPointerException {
+		MainHandler.CURRENT_FILE_NAME = "";
 		FileDialog dialog = new FileDialog(new Frame(), "Save", FileDialog.SAVE);
 	    dialog.setVisible(true);
 	    String filePath = dialog.getDirectory();
         String fileName = (dialog.getFile().contains(".xls")) ? dialog.getFile() : dialog.getFile() + ".xls";
-        absoluteFileName = (filePath + fileName);
+        MainHandler.CURRENT_FILE_NAME = (filePath + fileName);
 	}
 	
 	private void createWorkbook() throws IOException {		
-		File file = new File(absoluteFileName);
+		File file = new File(MainHandler.CURRENT_FILE_NAME);
         file.createNewFile();
         FileOutputStream out = new FileOutputStream(file);
 	    invoiceWorkbook.write(out);
 	    out.close();	    
 	    invoiceWorkbook.close();
-	    System.out.println(file.getName() + " File Written Successfully!");
+	    MainHandler.CURRENT_FILE_NAME = "";
+	    MainHandler.CURRENT_FILE_NAME = file.getName();
 	}
 	
 	private HSSFSheet getSheet(String name) {
@@ -134,7 +126,7 @@ public final class SpreadSheetHandler {
 	
 	private void createValuesRow(HSSFSheet spreadsheet, SoldItemDetails invoice) {
 		int rowNum = spreadsheet.getLastRowNum() + 1;
-		int cellNum = 0;		
+		int cellNum = 0;
 		HSSFRow row = spreadsheet.createRow(rowNum);
 		
 		HSSFCell cell = row.createCell(cellNum);
@@ -176,6 +168,18 @@ public final class SpreadSheetHandler {
 		spreadsheet.autoSizeColumn(cellNum);
 		spreadsheet.setVerticallyCenter(true);
 		cell.setCellStyle(getValuesRowStyle());
+		cell.setCellValue(invoice.paymentDetails.getPaymentMode());
+		
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(getValuesRowStyle());
+		cell.setCellValue(invoice.paymentDetails.getPaymentStatus());
+		
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.courierDetails.getCourierName());
 		
 		cell = row.createCell(++cellNum);
@@ -208,5 +212,31 @@ public final class SpreadSheetHandler {
 		spreadsheet.setVerticallyCenter(true);
 		cell.setCellStyle(getValuesRowStyle());
 		cell.setCellValue(invoice.courierDetails.getCourierReturnCondition());
+	}
+	
+	private void createSummaryRow(HSSFSheet spreadsheet, 
+			int totalItemsSold, double grossAmount) {
+		int rowNum = spreadsheet.getLastRowNum() + 2;
+		int cellNum = 3;
+		
+		HSSFRow row = spreadsheet.createRow(rowNum);
+		
+		HSSFCell cell = row.createCell(cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(getHeadingRowStyle());
+		cell.setCellValue("Total Sales");
+				
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(getHeadingRowStyle());
+		cell.setCellValue(totalItemsSold);
+		
+		cell = row.createCell(++cellNum);
+		spreadsheet.autoSizeColumn(cellNum);
+		spreadsheet.setVerticallyCenter(true);
+		cell.setCellStyle(getHeadingRowStyle());
+		cell.setCellValue(grossAmount);
 	}
 }

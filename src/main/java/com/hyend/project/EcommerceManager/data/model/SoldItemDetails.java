@@ -221,7 +221,7 @@ public class SoldItemDetails {
 		.append(ConstantFields.PAYMENT_DETAILS, new Document()
     		.append(ConstantFields.TOTAL_AMOUNT_FIELD, paymentDetails.getTotalAmount())
     		.append(ConstantFields.PAYMENT_STATUS_FIELD, paymentDetails.getPaymentStatus())
-    		.append(ConstantFields.PAYMENT_METHOD_FIELD, paymentDetails.getPaymentMethod())
+    		.append(ConstantFields.PAYMENT_MODE_FIELD, paymentDetails.getPaymentMode())
     		.append(ConstantFields.SHIPPING_CHARGE_FIELD, paymentDetails.getShippingCharge()))			
         .append(ConstantFields.TAX_DETAILS, new Document()
 			.append(ConstantFields.GST_RATE_FIELD, taxDetails.getGSTRate())
@@ -277,7 +277,7 @@ public class SoldItemDetails {
 		Document amountDoc = (Document) document.get(ConstantFields.PAYMENT_DETAILS);
 		soldItemDetails.paymentDetails.setTotalAmount(amountDoc.getDouble(ConstantFields.TOTAL_AMOUNT_FIELD));
 		soldItemDetails.paymentDetails.setPaymentStatus(amountDoc.getString(ConstantFields.PAYMENT_STATUS_FIELD)); 
-		soldItemDetails.paymentDetails.setPaymentMethod(amountDoc.getString(ConstantFields.PAYMENT_METHOD_FIELD));		
+		soldItemDetails.paymentDetails.setPaymentMode(amountDoc.getString(ConstantFields.PAYMENT_MODE_FIELD));		
 		soldItemDetails.paymentDetails.setShippingCharge(amountDoc.getDouble(ConstantFields.SHIPPING_CHARGE_FIELD));
 		
 		Document taxDoc = (Document) document.get(ConstantFields.TAX_DETAILS);
@@ -482,9 +482,9 @@ public class SoldItemDetails {
 	
 	public class PaymentDetails {
 		
-		private Double totalAmount = 0.0;	
-		private String paymentMethod = "NA";
+		private Double totalAmount = 0.0;			
 		private Double shippingCharge = 0.0;
+		private String paymentMode = ConstantFields.PAYMENT_MODES[0];
 		private String paymentStatus = ConstantFields.PAYMENT_STATUS_IN_PROCESS;
 
 		public PaymentDetails() {}
@@ -497,12 +497,12 @@ public class SoldItemDetails {
 			return this.totalAmount;
 		}
 		
-		public void setPaymentMethod(String paymentMethod) {
-			this.paymentMethod = paymentMethod;
+		public void setPaymentMode(String paymentMode) {
+			this.paymentMode = paymentMode;
 		}
 		
-		public String getPaymentMethod() {
-			return this.paymentMethod;
+		public String getPaymentMode() {
+			return this.paymentMode;
 		}
 		
 		public void setShippingCharge(double shippingCharge) {

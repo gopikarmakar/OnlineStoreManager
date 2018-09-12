@@ -92,14 +92,71 @@ public final class DatabaseHandler {
 	public List<SoldItemDetails> getAllInvoices() throws NullPointerException {
 		List<SoldItemDetails> records = new ArrayList<>();
 		MongoCursor<Document> cursor = dbCollection.find().iterator();
-		//System.out.println(cursor.next());
 		try {
-		    while (cursor.hasNext()) {
-		    	//System.out.println(cursor.next());
+		    while (cursor.hasNext()) {		    
 		        records.add(SoldItemDetails.fromDocument(cursor.next()));
 		    }
 		} finally {
 		    cursor.close();
+		}
+		return records;
+	}
+	
+	public List<SoldItemDetails> getInvoicesBetweenOrderDate(
+			Date startDate, Date endDate) throws MongoServerException {
+		final List<SoldItemDetails> records = new ArrayList<>();
+		Bson filter = Filters.and(Filters.gte(
+				ConstantFields.ORDER_DETAILS + "." + 
+				ConstantFields.ORDER_DATE_FIELD, startDate), 
+				Filters.lte(ConstantFields.ORDER_DETAILS + "." +
+				ConstantFields.ORDER_DATE_FIELD, endDate));
+		Block<Document> dateBlock = new Block<Document>() {
+			@Override
+			public void apply(final Document document) {			    
+				records.add(SoldItemDetails.fromDocument(document));
+			}
+		};
+		dbCollection.find(filter).forEach(dateBlock);
+		if(records.isEmpty()) {
+			throw new RuntimeException(ConstantFields.NO_RECORDS_FOUND_ERROR);
+		}
+		return records;
+	}
+	
+	public List<SoldItemDetails> getPaymentReceivedInvoices() throws MongoServerException {
+		final List<SoldItemDetails> records = new ArrayList<>();
+		Bson filter = Filters.and(Filters.eq(
+				ConstantFields.PAYMENT_DETAILS + "." + 
+				ConstantFields.PAYMENT_STATUS_FIELD,
+				ConstantFields.PAYMENT_STATUS_RECEIVED));
+		Block<Document> dateBlock = new Block<Document>() {
+			@Override
+			public void apply(final Document document) {			    
+				records.add(SoldItemDetails.fromDocument(document));
+			}
+		};
+		dbCollection.find(filter).forEach(dateBlock);
+		if(records.isEmpty()) {
+			throw new RuntimeException(ConstantFields.NO_RECORDS_FOUND_ERROR);
+		}
+		return records;
+	}
+	
+	public List<SoldItemDetails> getCourierDeliveredInvoices() throws MongoServerException {
+		final List<SoldItemDetails> records = new ArrayList<>();
+		Bson filter = Filters.and(Filters.eq(
+				ConstantFields.COURIER_DETAILS + "." + 
+				ConstantFields.COURIER_STATUS_FIELD,
+				ConstantFields.COURIER_STATUS_DELIVERED));
+		Block<Document> dateBlock = new Block<Document>() {
+			@Override
+			public void apply(final Document document) {			    
+				records.add(SoldItemDetails.fromDocument(document));
+			}
+		};
+		dbCollection.find(filter).forEach(dateBlock);
+		if(records.isEmpty()) {
+			throw new RuntimeException(ConstantFields.NO_RECORDS_FOUND_ERROR);
 		}
 		return records;
 	}
@@ -120,117 +177,111 @@ public final class DatabaseHandler {
 		return SoldItemDetails.fromDocument(document);
 	}
 	
-	public void updatePaymentStatusAsReceived(String orderId) throws MongoServerException {
+	public boolean updatePaymentStatusAsReceived(String orderId) throws MongoServerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
 				ConstantFields.ORDER_ID_FIELD, orderId));
 		Document doc = new Document("$set", new Document(
 				ConstantFields.PAYMENT_DETAILS + "." + 
 				ConstantFields.PAYMENT_STATUS_FIELD, 
 				ConstantFields.PAYMENT_STATUS_RECEIVED));
-		validateUpdate(dbCollection.updateOne(filter, doc));
+		return validateUpdate(dbCollection.updateOne(filter, doc));
 	}
 	
-	public void updateCourierStatusAsDelivered(String orderId) throws MongoServerException {
+	public boolean updateCourierStatusAsDelivered(String orderId) throws MongoServerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
 				ConstantFields.ORDER_ID_FIELD, orderId));
 		Document doc = new Document("$set", new Document(
 				ConstantFields.COURIER_DETAILS + "." + 
 				ConstantFields.COURIER_STATUS_FIELD, 
 				ConstantFields.COURIER_STATUS_DELIVERED));
-		validateUpdate(dbCollection.updateOne(filter, doc));
+		return validateUpdate(dbCollection.updateOne(filter, doc));
 	}
 	
-	public void updateReturnStatusAsReturned(String orderId) throws MongoServerException {
+	public boolean updateReturnStatusAsReturned(String orderId) throws MongoServerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
 				ConstantFields.ORDER_ID_FIELD, orderId));
 		Document doc = new Document("$set", new Document(
 				ConstantFields.COURIER_DETAILS + "." + 
 				ConstantFields.COURIER_RETURN_STATUS_FIELD, 
 				ConstantFields.COURIER_RETURN_STATUS_RETURNED));
-		validateUpdate(dbCollection.updateOne(filter, doc));
+		return validateUpdate(dbCollection.updateOne(filter, doc));
 	}
 	
-	public void updateReturnCondition(String orderId, String condition) throws MongoServerException {
+	public boolean updatePaymentMode(String orderId, String mode) throws MongoServerException {
+		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
+				ConstantFields.ORDER_ID_FIELD, orderId));
+		Document doc = new Document("$set", new Document(
+				ConstantFields.PAYMENT_DETAILS + "." + 
+				ConstantFields.PAYMENT_MODE_FIELD, mode));
+		return validateUpdate(dbCollection.updateOne(filter, doc));
+	}
+	
+	public boolean updateReturnCondition(String orderId, String condition) throws MongoServerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
 				ConstantFields.ORDER_ID_FIELD, orderId));
 		Document doc = new Document("$set", new Document(
 				ConstantFields.COURIER_DETAILS + "." + 
 				ConstantFields.COURIER_RETURN_CONDITION_FIELD, condition));
-		validateUpdate(dbCollection.updateOne(filter, doc));
+		return validateUpdate(dbCollection.updateOne(filter, doc));
 	}
 	
-	public void updateReturnRcvdDate(String orderId, Date rcvdDate) throws MongoServerException {
+	public boolean updateReturnRcvdDate(String orderId, Date rcvdDate) throws MongoServerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.ORDER_DETAILS + "." +
 				ConstantFields.ORDER_ID_FIELD, orderId));
 		Document doc = new Document("$set", new Document(
 				ConstantFields.COURIER_DETAILS + "." + 
 				ConstantFields.COURIER_RETURN_RCVD_DATE_FIELD, rcvdDate));
-		validateUpdate(dbCollection.updateOne(filter, doc));
+		return validateUpdate(dbCollection.updateOne(filter, doc));
 	}
 	
-	public void deleteAllPaymentStatusAsReceived() throws MongoServerException {
+	public boolean deleteAllPaymentStatusAsReceived() throws MongoServerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.PAYMENT_DETAILS + "." +
 				ConstantFields.PAYMENT_STATUS_FIELD, 
 				ConstantFields.PAYMENT_STATUS_RECEIVED));		
-		validateDelete(dbCollection.deleteMany(filter));
+		return validateDelete(dbCollection.deleteMany(filter));
 	}
 	
-	public void deleteAllCourierStatusAsDelivered() throws MongoServerException {
+	public boolean deleteAllCourierStatusAsDelivered() throws MongoServerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.COURIER_DETAILS + "." +
 				ConstantFields.COURIER_STATUS_FIELD, 
 				ConstantFields.COURIER_STATUS_DELIVERED));		
-		validateDelete(dbCollection.deleteMany(filter));
+		return validateDelete(dbCollection.deleteMany(filter));
 	}
 	
-	public void deleteAllCourierStatusAsReturned() throws MongoServerException {
+	public boolean deleteAllCourierStatusAsReturned() throws MongoServerException {
 		Bson filter = Filters.and(Filters.eq(ConstantFields.COURIER_DETAILS + "." +
 				ConstantFields.COURIER_RETURN_STATUS_FIELD, 
 				ConstantFields.COURIER_RETURN_STATUS_RETURNED));		
-		validateDelete(dbCollection.deleteMany(filter));
-	}
-	
-	public List<SoldItemDetails> getInvoicesBetweenOrderDate(Date startDate, Date endDate) throws MongoServerException {
-		final List<SoldItemDetails> records = new ArrayList<>();
-		Bson filter = Filters.and(Filters.gte(
-				ConstantFields.ORDER_DETAILS + "." + 
-				ConstantFields.ORDER_DATE_FIELD, startDate), 
-				Filters.lte(ConstantFields.ORDER_DETAILS + "." +
-				ConstantFields.ORDER_DATE_FIELD, endDate));
-		Block<Document> dateBlock = new Block<Document>() {
-			@Override
-			public void apply(final Document document) {
-			    System.out.println(document);
-				records.add(SoldItemDetails.fromDocument(document));
-			}
-		};
-		dbCollection.find(filter).forEach(dateBlock);
-		if(records.isEmpty()) {
-			throw new RuntimeException(ConstantFields.NO_RECORDS_FOUND_ERROR);
-		}
-		return records;
+		return validateDelete(dbCollection.deleteMany(filter));
 	}
 	
 	private List<Document> createDocuments() {
 		List<Document> documents = new ArrayList<>();
-		for(SoldItemDetails details : purchasedItemsCollection.getSoldItemsDetailsList()) {
-			//System.out.println(details.toString());
+		for(SoldItemDetails details : purchasedItemsCollection.getSoldItemsDetailsList()) {			
 			documents.add(details.toDocument());
 		}
 		return documents;
 	}
 	
-	private void validateUpdate(UpdateResult result) {
-		if(result.getMatchedCount() == 0) {			
-			throw new RuntimeException(ConstantFields.NO_MATCH_FOUND_ERROR);
+	private boolean validateUpdate(UpdateResult result) {
+		boolean isUpdated = true;
+		if(result.getMatchedCount() == 0) {
+			isUpdated = false;
+			throw new RuntimeException(ConstantFields.NO_RECORDS_FOUND_ERROR);
 		}
 		else if(result.getModifiedCount() == 0) {
+			isUpdated = false;
 			throw new RuntimeException(ConstantFields.ALREADY_UPDATED_ERROR);
 		}
+		return isUpdated;
 	}
 	
-	private void validateDelete(DeleteResult result) {
+	private boolean validateDelete(DeleteResult result) {
+		boolean isDeleted = true;
 		if(result.getDeletedCount() == 0) {
-			throw new RuntimeException(ConstantFields.NO_MATCH_FOUND_ERROR);
+			isDeleted = false;
+			throw new RuntimeException(ConstantFields.NO_RECORDS_FOUND_ERROR);
 		}
+		return isDeleted;
 	}
 }

@@ -24,24 +24,32 @@ public final class MainHandler {
 	private final String dbName = "HyendStore";
 	private final String invoiceTableNameTag = "_invoices"; 
 
-	private final PDFInvoiceHandler pdfHandler;
-	private final DatabaseHandler dbHandler;
-	private final SpreadSheetHandler sheetHandler;
+	private PDFInvoiceHandler pdfHandler;
+	private DatabaseHandler dbHandler;
+	private SpreadSheetHandler sheetHandler;
 	
+	/**
+	 * Constructor
+	 */
 	public MainHandler() {		
 		dbHandler = new DatabaseHandler(this);
 		pdfHandler = new PDFInvoiceHandler(this);		
 		sheetHandler = new SpreadSheetHandler(this);
 	}
 	
+	/**
+	 * Public Methods
+	 */
 	public void init() {
-				
 		connectToDB();
-		/*if(isConnectedToDB) {
-			//updateCourierStatusForOrderId("OD112973057490800000");
-		}*/
 	}
 	
+	public void dispose() {
+		dbHandler = null;
+		pdfHandler = null;
+		sheetHandler = null;
+	}
+		
 	public boolean isConnectedToDB() {
 		boolean isConnected = false;
 		try {
@@ -60,7 +68,7 @@ public final class MainHandler {
 			fetchInvoicesCollection();
 	}
 	
-	public void saveInvoicePdfToDB() {
+	public void storeInvoicePdfToDB() {
 		if(isPlatformNameAvailable()) {
 			if(isConnectedToDB()) {
 				fetchAndInitInvoicesData();		
@@ -69,39 +77,42 @@ public final class MainHandler {
 		}
 	}
 	
-	public void generateSpreadSheetBetween(String startDate, String endDate) {
+	public void generateSpreadSheet(int generateForWhom, 
+			String startDate, String endDate) {
 		try {
-			if(!isPlatformNameAvailable()) return;
+			if(!isPlatformNameAvailable()) return;						
 			if(!isConnectedToDB()) return;
-			System.out.println("Start Date: " + startDate);
-			System.out.println("End Date: " + endDate);
-			SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-			Date startDATE = dateFormat.parse(startDate);
-			Date endDATE = dateFormat.parse(endDate);
-			/*Calendar cal = Calendar.getInstance();
-			cal.setTime(startDt);
-			String fromMonth = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
-			cal.setTime(endDt);
-			String tillMonth = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());*/
-			getAllInvoicesBetween(startDATE, endDATE);
-			sheetHandler.generateInvoiceSheetForDates(startDate, endDate);
+			switch(generateForWhom) {
+				case ConstantFields.GENERATE_FOR_DATES:
+					SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+					Date startDATE = dateFormat.parse(startDate);
+					Date endDATE = dateFormat.parse(endDate);
+					getAllInvoicesBetween(startDATE, endDATE);
+					break;
+				case ConstantFields.GENERATE_FOR_PAYMENT_RECEIVED:
+					getAllPaymentReceivedInvoices();
+					break;
+				case ConstantFields.GENERATE_FOR_COURIER_DELIVERED:
+					getAllCourierDeliveredInvoices();
+					break;					
+			}			
+			sheetHandler.generateInvoiceSheetForDates();
+			showSpreadSheetFileSavedSuccessfullyMessage();
 		} catch (ParseException pex) {			
 			showInvalidDateErrorMessage();
 			return;
 		} catch (IOException ioex) {
-			OnlineStoreManager.showErrorMessage("Problem Occurred", 
-					"Something Went Wrong. Please Try Save Again!");
+			showSomethingWrongErrorMessage();
 			return;
 		} catch (NullPointerException npex) {
-			OnlineStoreManager.showErrorMessage("Save Cancelled", 
-					"It's Cancelled. File Did Not Save!");
+			showFileSaveCancelledErrorMessage();
 			return;
 		} catch (RuntimeException rex) {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
 			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
-				showNoInvoiceFoundErrorMessageForDates();			
+				showNoInvoiceFoundToCreateSheetErrorMessage();			
 			return;
 		} finally {
 			/**
@@ -116,13 +127,34 @@ public final class MainHandler {
 			if(!isValidValue(orderId)) return;
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;			
-			dbHandler.updatePaymentStatusAsReceived(orderId);
+			if(dbHandler.updatePaymentStatusAsReceived(orderId))
+				showRecordsUpdatedSuccessfulMessage(orderId);
 		} catch (RuntimeException rex) {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
-			else if(rex.getMessage().equals(ConstantFields.NO_MATCH_FOUND_ERROR))
-				showNoInvoiceFoundErrorMessage(orderId);
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
+				showNoInvoiceFoundToUpdateErrorMessage(orderId);
+			else if(rex.getMessage().equals(ConstantFields.ALREADY_UPDATED_ERROR))
+				showRecordAlreadyUpdatedErrorMessage(orderId);
+			return;
+		}
+	}
+	
+	public void updatePaymentMode(String orderId, String mode) {
+		try {
+			if(!isValidValue(orderId)) return;
+			if(!isValidValue(mode)) return;
+			if(!isPlatformNameAvailable()) return;
+			if(!isConnectedToDB()) return;			
+			if(dbHandler.updatePaymentMode(orderId, mode))
+				showRecordsUpdatedSuccessfulMessage(orderId);
+		} catch (RuntimeException rex) {
+			if(rex instanceof MongoServerException) {
+				showMongoExceptionErrorMessage();
+			}
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
+				showNoInvoiceFoundToUpdateErrorMessage(orderId);
 			else if(rex.getMessage().equals(ConstantFields.ALREADY_UPDATED_ERROR))
 				showRecordAlreadyUpdatedErrorMessage(orderId);
 			return;
@@ -134,31 +166,33 @@ public final class MainHandler {
 			if(!isValidValue(orderId)) return;
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;
-			dbHandler.updateCourierStatusAsDelivered(orderId);
+			if(dbHandler.updateCourierStatusAsDelivered(orderId))
+				showRecordsUpdatedSuccessfulMessage(orderId);
 		} catch (RuntimeException rex) {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
-			else if(rex.getMessage().equals(ConstantFields.NO_MATCH_FOUND_ERROR))
-				showNoInvoiceFoundErrorMessage(orderId);
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
+				showNoInvoiceFoundToUpdateErrorMessage(orderId);
 			else if(rex.getMessage().equals(ConstantFields.ALREADY_UPDATED_ERROR))
 				showRecordAlreadyUpdatedErrorMessage(orderId);
 			return;
 		}
 	}
 	
-	public void updateReturnStatusFAsReturned(String orderId) {
+	public void updateReturnStatusAsReturned(String orderId) {
 		try {
 			if(!isValidValue(orderId)) return;
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;	
-			dbHandler.updateReturnStatusAsReturned(orderId);
+			if(dbHandler.updateReturnStatusAsReturned(orderId))
+				showRecordsUpdatedSuccessfulMessage(orderId);
 		} catch (RuntimeException rex) {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
-			else if(rex.getMessage().equals(ConstantFields.NO_MATCH_FOUND_ERROR))
-				showNoInvoiceFoundErrorMessage(orderId);
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
+				showNoInvoiceFoundToUpdateErrorMessage(orderId);
 			else if(rex.getMessage().equals(ConstantFields.ALREADY_UPDATED_ERROR))
 				showRecordAlreadyUpdatedErrorMessage(orderId);
 			return;
@@ -172,7 +206,8 @@ public final class MainHandler {
 			Date rcvdDt = dateFormat.parse(rcvdDate);
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;			 			
-			dbHandler.updateReturnRcvdDate(orderId, rcvdDt);
+			if(dbHandler.updateReturnRcvdDate(orderId, rcvdDt))
+				showRecordsUpdatedSuccessfulMessage(orderId);
 		} catch (ParseException pex) {
 			showInvalidDateErrorMessage();
 			return;
@@ -180,8 +215,8 @@ public final class MainHandler {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
-			else if(rex.getMessage().equals(ConstantFields.NO_MATCH_FOUND_ERROR))
-				showNoInvoiceFoundErrorMessage(orderId);
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
+				showNoInvoiceFoundToUpdateErrorMessage(orderId);
 			else if(rex.getMessage().equals(ConstantFields.ALREADY_UPDATED_ERROR))
 				showRecordAlreadyUpdatedErrorMessage(orderId);
 			return;
@@ -191,16 +226,16 @@ public final class MainHandler {
 	public void updateReturnCondition(String orderId, String condition) {
 		try {
 			if(!isValidValue(orderId)) return;
-			if(!isValidReturnCondition(condition)) return;
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;			
-			dbHandler.updateReturnCondition(orderId, condition);
+			if(dbHandler.updateReturnCondition(orderId, condition))
+				showRecordsUpdatedSuccessfulMessage(orderId);
 		} catch (RuntimeException rex) {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
-			else if(rex.getMessage().equals(ConstantFields.NO_MATCH_FOUND_ERROR))
-				showNoInvoiceFoundErrorMessage(orderId);
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
+				showNoInvoiceFoundToUpdateErrorMessage(orderId);
 			else if(rex.getMessage().equals(ConstantFields.ALREADY_UPDATED_ERROR))
 				showRecordAlreadyUpdatedErrorMessage(orderId);
 			return;
@@ -211,12 +246,13 @@ public final class MainHandler {
 		try {
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;			
-			dbHandler.deleteAllPaymentStatusAsReceived();
+			if(dbHandler.deleteAllPaymentStatusAsReceived())
+				showRecordsDeletedSuccessfulMessage();
 		} catch (RuntimeException rex) {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
-			else if(rex.getMessage().equals(ConstantFields.NO_MATCH_FOUND_ERROR))
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
 				showNoInvoiceFoundToDeleteErrorMessage();
 			return;
 		}
@@ -226,12 +262,13 @@ public final class MainHandler {
 		try {
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;			
-			dbHandler.deleteAllCourierStatusAsDelivered();
+			if(dbHandler.deleteAllCourierStatusAsDelivered())
+				showRecordsDeletedSuccessfulMessage();
 		} catch (RuntimeException rex) {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
-			else if(rex.getMessage().equals(ConstantFields.NO_MATCH_FOUND_ERROR))
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
 				showNoInvoiceFoundToDeleteErrorMessage();
 			return;
 		}
@@ -241,17 +278,21 @@ public final class MainHandler {
 		try {
 			if(!isPlatformNameAvailable()) return;
 			if(!isConnectedToDB()) return;			
-			dbHandler.deleteAllCourierStatusAsReturned();
+			if(dbHandler.deleteAllCourierStatusAsReturned())
+				showRecordsDeletedSuccessfulMessage();
 		} catch (RuntimeException rex) {
 			if(rex instanceof MongoServerException) {
 				showMongoExceptionErrorMessage();
 			}
-			else if(rex.getMessage().equals(ConstantFields.NO_MATCH_FOUND_ERROR))
+			else if(rex.getMessage().equals(ConstantFields.NO_RECORDS_FOUND_ERROR))
 				showNoInvoiceFoundToDeleteErrorMessage();
 			return;
 		}
-	}
+	} // End Of Public Methods
 	
+	/**
+	 * Private Methods
+	 */
 	private void connectToDB() {
 		try {
 			dbHandler.connectToDB(dbName);		
@@ -276,7 +317,7 @@ public final class MainHandler {
 		if(ConstantFields.CURRENT_ECOMM_PLATFORM_NAME.contains(
 				ConstantFields.ECOMMERCE_PLATFORMS[0])) {
 			isAvailble = false;
-			OnlineStoreManager.showErrorMessage("No Platform Name", 
+			OnlineStoreManager.showErrorMessage("No Platform Name Selected", 
 					"Please Select A Valid Platform Name and Try Again!");
 		}
 		return isAvailble;
@@ -292,15 +333,9 @@ public final class MainHandler {
 		return true;
 	}
 	
-	private boolean isValidReturnCondition(String condition) {
-		if(condition.equals("")) {
-			OnlineStoreManager.showErrorMessage("Wrong Return Condition", 					
-					"Please Select A Valid Return Condition and Try Again!");
-			return false;
-		}
-		return true;
-	}
-	
+	/**
+	 * All Error Messages
+	 */
 	private void showDBConnectionLostErrorMessage() {
 		OnlineStoreManager.showErrorMessage("DB Connection Lost", 
 				"Connection Lost With MongoDB" + "\n" +
@@ -309,8 +344,13 @@ public final class MainHandler {
 	
 	private void showMongoExceptionErrorMessage() {
 		OnlineStoreManager.showErrorMessage("Problem Occurred", 
-				"There's Some Problem With MongoDB" + "\n" +
+				"There's Some Problem With MongoDB Server" + "\n" +
 				"Try Again By Restarting MongoDB Server and App Both!");
+	}
+	
+	private void showSomethingWrongErrorMessage() {
+		OnlineStoreManager.showErrorMessage("Problem Occurred", 
+				"Something Went Wrong. Please Try Again!");
 	}
 	
 	private void showInvalidDateErrorMessage() {
@@ -323,7 +363,7 @@ public final class MainHandler {
 			"No Invoices Found To Delete. All Up To Date!");
 	}
 	
-	private void showNoInvoiceFoundErrorMessage(String orderId) {
+	private void showNoInvoiceFoundToUpdateErrorMessage(String orderId) {
 		OnlineStoreManager.showErrorMessage("No Invoice Updated", 
 			"No Invoice Found For Order Id = " + orderId + "\n" +
 			"Please Enter A Valid Order Id and Try Again!");
@@ -331,41 +371,94 @@ public final class MainHandler {
 	
 	private void showRecordAlreadyUpdatedErrorMessage(String orderId) {
 		OnlineStoreManager.showErrorMessage("Duplicate Invoice", 
-			"Invoice Already Updated For Order Id = " + orderId + "\n" +
-			"Please Enter A New Order Id and Try Again!");
+			"Cannot Update The Same Value For Order Id = " + orderId + "\n" +
+			"Try Again With A New Order Id or With A New Value!");
 	}
 	
-	private void showNoInvoiceFoundErrorMessageForDates() {
+	private void showNoInvoiceFoundToCreateSheetErrorMessage() {
 		OnlineStoreManager.showErrorMessage("No Invoices Found", 
-			"No Invoices Found Between Those Dates" + "\n" +
-			"Please Try Again With Other Dates!");
+			"No Invoices Found To Create Spreadsheet As Per Searching Condition" + "\n" +
+			"Please Update DB and Then Generate spreadsheet!");
+	}
+	
+	private void showNoPDFFileSelectedErrorMessage() {
+		OnlineStoreManager.showErrorMessage("Not File Selected", 
+			"No Valid PDF FIle Selected" + "\n" +
+			"Select A Valid PDF File and Try Again!");
+	}
+	
+	private void showNotAPDFFileErrorMessage() {
+		OnlineStoreManager.showErrorMessage("Not A PDF File", 
+			"It's Not A Valid PDF FIle" + "\n" +
+			"Try Again With A Valid PDF File!");
+	}
+	
+	private void showPDFFileHasNoPagesErrorMessage() {
+		OnlineStoreManager.showErrorMessage("No Pages", 
+			"PDF File Doesn't Have Any Invoice To Read Inside" + "\n" +
+			"Try Again With A Valid PDF File With Invoices Inside!");
+	}
+	
+	private void showPDFFileIsEncryptedErrorMessage() {
+		OnlineStoreManager.showErrorMessage("Encrypted PDF File", 
+			"PDF File Is Encrypted With A Password" + "\n" +
+			"Try Again With A Non Encrypted PDF File!");
+	}
+	
+	private void showPDFFileAlreadyProcessedErrorMessage() {
+		OnlineStoreManager.showErrorMessage("File Aready Processed", 
+			"This PDF FIle Already Processed" + "\n" +
+			"Try Again With A New Valid PDF File!");
+	}
+	
+	private void showFileSaveCancelledErrorMessage() {
+		OnlineStoreManager.showErrorMessage("Save Cancelled", 
+				"Spreadsheet File Did Not Save!");
+	}
+	// End Of All Error Messages
+	
+	/**
+	 * All Successful Messages
+	 */
+	private void showFileStoredSuccessfulMessage() {
+		OnlineStoreManager.showInfoMessage("File Stored", 
+				MainHandler.CURRENT_FILE_NAME + " Stored To DB Successfully!");
+	}
+	
+	private void showSpreadSheetFileSavedSuccessfullyMessage() {
+		OnlineStoreManager.showInfoMessage("File Saved", 
+				MainHandler.CURRENT_FILE_NAME + " Created and Saved Successfully!");
+	}
+	
+	private void showRecordsUpdatedSuccessfulMessage(String orderId) {
+		OnlineStoreManager.showInfoMessage("Records Updated", 
+				"Records Updated Successfully for Order Id: " + orderId);
+	}
+	
+	private void showRecordsDeletedSuccessfulMessage() {
+		OnlineStoreManager.showInfoMessage("Records Deleted", 
+				"Records Deleted Successfully!");
 	}
 		
 	private void fetchAndInitInvoicesData() {
 		int status = pdfHandler.readPdfDcoument();
 		switch (status) {
 			case ConstantFields.PDF_NULL_FILE_ERROR:				
-				//TODO: Show error message
-				System.out.println("Please Choose At Least A File!");
+				showNoPDFFileSelectedErrorMessage();
 				return;
 			case ConstantFields.PDF_NO_PAGES_ERROR:
-				//TODO: Show error message
-				System.out.println("There No Pages In PDF File Error!");
+				showPDFFileHasNoPagesErrorMessage();
 				return;
 			case ConstantFields.PDF_ENCRYPTED_ERROR:
-				//TODO: Show error message
-				System.out.println("PDF File Is Encrypted Error!");
+				showPDFFileIsEncryptedErrorMessage();
 				return;
 			case ConstantFields.NOT_A_PDF_FILE_ERROR:
-				//TODO: Show error message
-				System.out.println("It's Not A PDF File Error!");
+				showNotAPDFFileErrorMessage();
 				return;
 			case ConstantFields.PDF_LOAD_READ_CLOSE_ERROR:
-				//TODO: Show error message
-				System.out.println("Load, Read or Close PDF File Error!");
+				showSomethingWrongErrorMessage();
 				return;
-			default:
-				//TODO: Show success message alert dialog box
+			default:				
 				System.out.println(MainHandler.CURRENT_FILE_LOCATION + 
 								   MainHandler.CURRENT_FILE_NAME + 
 								   " File Read & Parsed Successfully!");
@@ -376,12 +469,10 @@ public final class MainHandler {
 	private void storeAllInvoicesToDB() {		
 		try {
 			dbHandler.insertAllToCollection();
-			OnlineStoreManager.showInfoMessage("File Saved", 
-					"Invoice Data Stored To DB Successfully!");
+			showFileStoredSuccessfulMessage();
 		} catch (RuntimeException rex) {
 			if(rex.getMessage().contains("duplicate key error")) {
-				OnlineStoreManager.showErrorMessage("Duplicate File Error", 
-						"This File's Saved Already. Please Select A New File!");				
+				showPDFFileAlreadyProcessedErrorMessage();				
 			}
 			return;
 		} finally {
@@ -431,5 +522,15 @@ public final class MainHandler {
 	private void getAllInvoicesBetween(Date startDate, Date endDate) throws RuntimeException {
 		SoldItemsCollection.get().addSoldItemDetailsList(
 			dbHandler.getInvoicesBetweenOrderDate(startDate, endDate));										 
+	}
+	
+	private void getAllPaymentReceivedInvoices() throws RuntimeException {
+		SoldItemsCollection.get().addSoldItemDetailsList(
+			dbHandler.getPaymentReceivedInvoices());										 
+	}
+	
+	private void getAllCourierDeliveredInvoices() throws RuntimeException {
+		SoldItemsCollection.get().addSoldItemDetailsList(
+			dbHandler.getCourierDeliveredInvoices());										 
 	}
 }

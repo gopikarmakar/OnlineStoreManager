@@ -3,6 +3,17 @@ package com.hyend.project.EcommerceManager.util;
 public class ConstantFields {
 	
 	/**
+	 * Spread Sheet Column Fields
+	 */
+	public static final String[] COLUMN_FIELDS = {
+		"Order Id", "Order Date", "Invoice Id", "Invoice Date",
+		"Quantity", "Amount", "Payment Mode", "Payment Status",  
+		"Courier Name", "Tracking Id", "Courier Status", 
+		"Courier Return Status", "Courier Return Rcvd Date",
+		"Courier Return Condition"
+	};
+	
+	/**
 	 * Ecommerce Platforms Names
 	 */
 	public static final String[] ECOMMERCE_PLATFORMS = {
@@ -10,21 +21,10 @@ public class ConstantFields {
 		"snapdeal", "shopclues"
 	};
 	
-	public static final String[] COURIER_RETURN_CONDITIONS = {
-			"Select Return Condition",
-			"Returned By Customer",
-			"Returned From Delivery"
-	};
-	
 	/**
-	 * Spread Sheet Column Fields
+	 * ECommerce Platform
 	 */
-	public static final String[] COLUMN_FIELDS = {
-		"Order Id", "Order Date", "Invoice Id", "Invoice Date",
-		"Quantity", "Amount", "Courier Name", "Tracking Id", 
-		"Courier Status", "Courier Return Status",
-		"Courier Return Rcvd Date", "Courier Return Condition" 
-	};
+	public static final String ECOMMERCE_PLATFORM_NAME_FIELD = "ecomm_platform_name";
 	
 	/**
 	 * Default Ecommerce Name
@@ -35,9 +35,15 @@ public class ConstantFields {
 	/**
 	 * Error Messages
 	 */
-	public static final String NO_MATCH_FOUND_ERROR = "no_match_found";
 	public static final String NO_RECORDS_FOUND_ERROR = "no_records_found";
 	public static final String ALREADY_UPDATED_ERROR = "record_already_updated";
+	
+	/**
+	 * Sheet generation codes
+	 */
+	public static final int GENERATE_FOR_DATES = 0;	
+	public static final int GENERATE_FOR_PAYMENT_RECEIVED = 1;
+	public static final int GENERATE_FOR_COURIER_DELIVERED = 2;
 	
 	/**
 	 * PDF File Read Fail Error Codes.
@@ -48,30 +54,7 @@ public class ConstantFields {
 	public static final int PDF_NULL_FILE_ERROR = 3;
 	public static final int NOT_A_PDF_FILE_ERROR = 4;
 	public static final int PDF_LOAD_READ_CLOSE_ERROR = 5;
-	public static final int ECOMMERCE_PLATFORM_NOT_FOUND_ERROR = 6;
-	
-	/**
-	 * Payment Method Fields
-	 */	 
-	public static final String PAYMENT_METHOD_COD = "cod";
-	public static final String PAYMENT_METHOD_PREPAID = "prepaid";
-	public static final String PAYMENT_STATUS_RECEIVED = "received";
-	public static final String PAYMENT_STATUS_IN_PROCESS = "in-process";
-	
-	
-	/**
-	 * Courier Statuses
-	 */	 
-	public static final String COURIER_STATUS_DELIVERED = "delivered";
-	public static final String COURIER_STATUS_IN_TRANSIT = "in-transit";
-	public static final String COURIER_RETURN_STATUS_RETURNED = "returned";
-	public static final String COURIER_RETURN_BY_CUSTOMER = "";
-	public static final String COURIER_RETURN_FROM_DELIVERY = "";
-	
-	/**
-	 * ECommerce Platform
-	 */
-	public static final String ECOMMERCE_PLATFORM_NAME_FIELD = "ecomm_platform_name";
+	public static final int ECOMMERCE_PLATFORM_NOT_FOUND_ERROR = 6;	 
 	
 	/**
 	 * Tax Fields
@@ -94,9 +77,16 @@ public class ConstantFields {
 	 */	
 	public static final String PAYMENT_DETAILS = "payment_details";	
 	public static final String TOTAL_AMOUNT_FIELD = "total_amount";
+	public static final String PAYMENT_MODE_FIELD = "payment_mode";
+	public static final String PAYMENT_STATUS_RECEIVED = "received";	
 	public static final String PAYMENT_STATUS_FIELD = "payment_status";
-	public static final String PAYMENT_METHOD_FIELD = "payment_method";
+	public static final String PAYMENT_STATUS_IN_PROCESS = "in-process";
 	public static final String SHIPPING_CHARGE_FIELD = "shipping_charge";
+	public static final String[] PAYMENT_MODES = {
+			"Update Payment Mode",
+			"COD", 
+			"Prepaid"
+	};
 	
 	/**
 	 * Orders Fields
@@ -110,8 +100,8 @@ public class ConstantFields {
 	/**
 	 * Products Fields
 	 */
-	public static final String PRODUCT_DETAILS = "product_details";
-	public static final String CPD_FIELD = "cpd";	
+	public static final String CPD_FIELD = "cpd";
+	public static final String PRODUCT_DETAILS = "product_details";		
 	public static final String PRODUCT_ID_FIELD = "product_id";
 	public static final String PRODUCT_SKU_FIELD = "product_sku";
 	public static final String PRODUCT_NAME_FIELD = "product_name";
@@ -123,11 +113,19 @@ public class ConstantFields {
 	 */
 	public static final String COURIER_DETAILS = "courier_details";
 	public static final String COURIER_NAME_FIELD = "courier_name";
-	public static final String COURIER_STATUS_FIELD = "courier_status";	
+	public static final String COURIER_STATUS_DELIVERED = "delivered";
+	public static final String COURIER_STATUS_FIELD = "courier_status";
+	public static final String COURIER_STATUS_IN_TRANSIT = "in-transit";
+	public static final String COURIER_RETURN_STATUS_RETURNED = "returned";
 	public static final String COURIER_TRACKING_ID_FIELD = "courier_tracking_id";
 	public static final String COURIER_RETURN_STATUS_FIELD = "courier_return_status";
 	public static final String COURIER_RETURN_RCVD_DATE_FIELD = "courier_return_rcvd_date";
 	public static final String COURIER_RETURN_CONDITION_FIELD = "courier_return_condition";
+	public static final String[] COURIER_RETURN_CONDITIONS = {
+			"Update Return Condition",
+			"Returned By Customer",
+			"Returned From Delivery"
+	};
 	
 	/**
 	 * Buyer Fields
